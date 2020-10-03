@@ -13,6 +13,7 @@ var config = {
 
 var bullets1;
 var bullets2;
+var shipbots;
 var ship;
 var speed;
 var stats;
@@ -22,6 +23,17 @@ var mouseX = 0;
 var mouseY = 0;
 
 var game = new Phaser.Game(config);
+
+
+function spawn_bots (n)
+{
+    var i;
+    for (i = 0; i < n; i++) {
+        var bots = shipbots.get();
+        bots.spawn();
+    }
+}
+
 
 function preload ()
 {
@@ -79,7 +91,6 @@ function create ()
                 this.setVisible(false);
             }
         }
-
     });
 
     bullets1 = this.add.group({
@@ -87,35 +98,63 @@ function create ()
         maxSize: 50,
         runChildUpdate: true
     });
-    
+
+    var Ships = new Phaser.Class({
+
+        Extends: Phaser.GameObjects.Image,
+
+        initialize:
+
+        function Ships (scene)
+        {
+            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
+
+            this.speed = Phaser.Math.GetSpeed(600, 1);
+        },
+
+        spawn: function ()
+        {
+            this.setActive(true);
+            this.setVisible(true);
+
+            this.setPosition(Phaser.Math.RND.integerInRange(0, 800), Phaser.Math.RND.integerInRange(0, 600));
+            this.setRotation(Phaser.Math.Angle.Random());
+        },
+
+        update: function (time, delta)
+        {
+            //this.x -= this.incX * (this.speed * delta);
+            //this.y -= this.incY * (this.speed * delta);
+        }
+    });
+
+    shipbots = this.add.group({
+        classType: Ships,
+        maxSize: 50,
+        runChildUpdate: true
+    });
+    spawn_bots(3);
+
     ship = this.add.sprite(400, 300, 'ship').setDepth(1);
 
     this.input.on('pointerdown', function (pointer) {
-
         isDown = true;
         mouseX = pointer.x;
         mouseY = pointer.y;
-
     });
 
     this.input.on('pointermove', function (pointer) {
-
         mouseX = pointer.x;
         mouseY = pointer.y;
-
     });
 
     this.input.on('pointerup', function (pointer) {
-
         isDown = false;
-
     });
-
 }
 
 function update (time, delta)
 {
-
     if (isDown && time > lastFired)
     {
         var bullet = bullets1.get();
@@ -129,5 +168,4 @@ function update (time, delta)
     }
 
     ship.setRotation(Phaser.Math.Angle.Between(mouseX, mouseY, ship.x, ship.y) - Math.PI / 2);    
-
 }
