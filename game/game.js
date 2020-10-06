@@ -110,7 +110,7 @@ function create ()
 
     var Player = new Phaser.Class({
 
-        Extends: Phaser.GameObjects.Image,
+        Extends: Ship,
 
         initialize: function Player (scene)
         {
