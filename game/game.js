@@ -51,15 +51,15 @@ var Bullet = new Phaser.Class({
         this.speed = Phaser.Math.GetSpeed(600, 1);
     },
 
-    fire: function (x, y)
+    fire: function (x, y, init_x, init_y)
     {
         this.setActive(true);
         this.setVisible(true);
 
         //  Bullets fire from the middle of the screen to the given x/y
-        this.setPosition(400, 300);
+        this.setPosition(init_x, init_y);
 
-        var angle = Phaser.Math.Angle.Between(x, y, 400, 300);
+        var angle = Phaser.Math.Angle.Between(x, y, init_x, init_y);
 
         this.setRotation(angle);
 
@@ -84,6 +84,7 @@ var Bullet = new Phaser.Class({
     }
 });
 
+
 var Ship = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Image,
@@ -103,6 +104,7 @@ var Ship = new Phaser.Class({
         this.setRotation(Phaser.Math.Angle.Random());
     }
 });
+
 
 var Player = new Phaser.Class({
 
