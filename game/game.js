@@ -13,11 +13,11 @@ var config = {
 
 
 // Constants
-var reloadTime = 500;
-var maxBots = 50;
-var maxPlayers = 1;
 var center_x = 400;
 var center_y = 300;
+var maxBots = 50;
+var maxPlayers = 3;
+var reloadTime = 500;
 
 //
 var bullets1;
@@ -39,7 +39,7 @@ function spawn_bots (n)
 {
     var i;
     for (i = 0; i < n; i++) {
-        var bot = shipbots.get();
+        var bot = bots.get();
         bot.spawn();
     }
 }
@@ -125,13 +125,7 @@ function create ()
 
             this.setPosition(Phaser.Math.RND.integerInRange(0, 800), Phaser.Math.RND.integerInRange(0, 600));
             this.setRotation(Phaser.Math.Angle.Random());
-        },
-
-        update: function (time, delta)
-        {
-            //this.x -= this.incX * (this.speed * delta);
-            //this.y -= this.incY * (this.speed * delta);
-        },
+        }
     });
 
     var Player = new Phaser.Class({
@@ -152,6 +146,8 @@ function create ()
             this.setPosition(center_x, center_y);
         }
     });
+
+    ////
 
     this.input.on('pointerdown', function (pointer) {
         isDown = true;
@@ -211,5 +207,5 @@ function update (time, delta)
         }
     }
 
-    player.setRotation(Phaser.Math.Angle.Between(mouseX, mouseY, player.x, player.y) - Math.PI / 2);    
+    player_main.setRotation(Phaser.Math.Angle.Between(mouseX, mouseY, player_main.x, player_main.y) - Math.PI / 2);    
 }
