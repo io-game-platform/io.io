@@ -21,7 +21,6 @@ var reloadTime = 500;
 
 //
 var bullets1;
-var bullets2;
 var bots;
 var players;
 var player_main;
@@ -33,6 +32,96 @@ var mouseX = 0;
 var mouseY = 0;
 
 var game = new Phaser.Game(config);
+
+
+var Bullet = new Phaser.Class({
+
+    Extends: Phaser.GameObjects.Image,
+
+    initialize:
+
+    function Bullet (scene)
+    {
+        Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet1');
+
+        this.incX = 0;
+        this.incY = 0;
+        this.lifespan = 0;
+
+        this.speed = Phaser.Math.GetSpeed(600, 1);
+    },
+
+    fire: function (x, y)
+    {
+        this.setActive(true);
+        this.setVisible(true);
+
+        //  Bullets fire from the middle of the screen to the given x/y
+        this.setPosition(400, 300);
+
+        var angle = Phaser.Math.Angle.Between(x, y, 400, 300);
+
+        this.setRotation(angle);
+
+        this.incX = Math.cos(angle);
+        this.incY = Math.sin(angle);
+
+        this.lifespan = 1000;
+    },
+
+    update: function (time, delta)
+    {
+        this.lifespan -= delta;
+
+        this.x -= this.incX * (this.speed * delta);
+        this.y -= this.incY * (this.speed * delta);
+
+        if (this.lifespan <= 0)
+        {
+            this.setActive(false);
+            this.setVisible(false);
+        }
+    }
+});
+
+var Ship = new Phaser.Class({
+
+    Extends: Phaser.GameObjects.Image,
+
+    initialize: function Ship (scene)
+    {
+        Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
+        this.setDepth(1)
+    },
+
+    spawn: function ()
+    {
+        this.setActive(true);
+        this.setVisible(true);
+
+        this.setPosition(Phaser.Math.RND.integerInRange(0, 800), Phaser.Math.RND.integerInRange(0, 600));
+        this.setRotation(Phaser.Math.Angle.Random());
+    }
+});
+
+var Player = new Phaser.Class({
+
+    Extends: Ship,
+
+    initialize: function Player (scene)
+    {
+        Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
+        this.setDepth(2)
+    },
+
+    spawn: function ()
+    {
+        this.setActive(true);
+        this.setVisible(true);
+
+        this.setPosition(center_x, center_y);
+    }
+});
 
 
 function spawn_bots (n)
@@ -57,97 +146,6 @@ function create ()
     //////////////////////
     //  Declarations    //
     //////////////////////
-
-    var Bullet = new Phaser.Class({
-
-        Extends: Phaser.GameObjects.Image,
-
-        initialize:
-
-        function Bullet (scene)
-        {
-            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet1');
-
-            this.incX = 0;
-            this.incY = 0;
-            this.lifespan = 0;
-
-            this.speed = Phaser.Math.GetSpeed(600, 1);
-        },
-
-        fire: function (x, y)
-        {
-            this.setActive(true);
-            this.setVisible(true);
-
-            //  Bullets fire from the middle of the screen to the given x/y
-            this.setPosition(400, 300);
-
-            var angle = Phaser.Math.Angle.Between(x, y, 400, 300);
-
-            this.setRotation(angle);
-
-            this.incX = Math.cos(angle);
-            this.incY = Math.sin(angle);
-
-            this.lifespan = 1000;
-        },
-
-        update: function (time, delta)
-        {
-            this.lifespan -= delta;
-
-            this.x -= this.incX * (this.speed * delta);
-            this.y -= this.incY * (this.speed * delta);
-
-            if (this.lifespan <= 0)
-            {
-                this.setActive(false);
-                this.setVisible(false);
-            }
-        }
-    });
-    
-    var Ship = new Phaser.Class({
-
-        Extends: Phaser.GameObjects.Image,
-
-        initialize: function Ship (scene)
-        {
-            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
-            this.setDepth(1)
-        },
-
-        spawn: function ()
-        {
-            this.setActive(true);
-            this.setVisible(true);
-
-            this.setPosition(Phaser.Math.RND.integerInRange(0, 800), Phaser.Math.RND.integerInRange(0, 600));
-            this.setRotation(Phaser.Math.Angle.Random());
-        }
-    });
-
-    var Player = new Phaser.Class({
-
-        Extends: Ship,
-
-        initialize: function Player (scene)
-        {
-            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
-            this.setDepth(2)
-        },
-
-        spawn: function ()
-        {
-            this.setActive(true);
-            this.setVisible(true);
-
-            this.setPosition(center_x, center_y);
-        }
-    });
-
-    ////
 
     this.input.on('pointerdown', function (pointer) {
         isDown = true;
@@ -186,7 +184,10 @@ function create ()
         runChildUpdate: true
     });
 
-    //
+    /////////////
+    //  SPAWN  //
+    /////////////
+
     player_main = players.get();
     player_main.spawn();
 
