@@ -13,11 +13,11 @@ var config = {
 
 
 // Constants
-var center_x = 400;
-var center_y = 300;
+var center_x = 400, center_y = 300;
 var maxBots = 50;
 var maxPlayers = 3;
 var reloadTime = 500;
+var player_speed = 5;
 
 //
 var bullets1;
@@ -28,8 +28,9 @@ var speed;
 var stats;
 var reloadingUntil = 0;
 var isDown = false;
-var mouseX = 0;
-var mouseY = 0;
+var mouseX = 0, mouseY = 0;
+var main_x = 0, main_y = 0;
+var aKey, dKey, wKey, sKey;
 
 var game = new Phaser.Game(config);
 
@@ -164,6 +165,11 @@ function create ()
         isDown = false;
     });
 
+    aKey = this.input.keyboard.addKey('A');
+    dKey = this.input.keyboard.addKey('D');
+    wKey = this.input.keyboard.addKey('W');
+    sKey = this.input.keyboard.addKey('S');
+
     //////////////////////
     //  ONE-TIME SETUP  //
     //////////////////////
@@ -196,8 +202,14 @@ function create ()
     spawn_bots(5);
 }
 
+
 function update (time, delta)
 {
+    if (aKey.isDown) {main_x -= player_speed;}
+    if (dKey.isDown) {main_x += player_speed;}
+    if (sKey.isDown) {main_y -= player_speed;}
+    if (wKey.isDown) {main_y += player_speed;}
+
     if (isDown && time > reloadingUntil)
     {
         var bullet = bullets1.get();
