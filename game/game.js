@@ -17,7 +17,7 @@ var center_x = 400, center_y = 300;
 var maxBots = 50;
 var maxPlayers = 3;
 var reloadTime = 500;
-var player_speed = 5;
+var player_speed = 2;
 
 //
 var bullets1;
@@ -58,6 +58,10 @@ var Bullet = new Phaser.Class({
         this.setVisible(true);
 
         //  Bullets fire from the middle of the screen to the given x/y
+        this._start_main_x = main_x;
+        this._start_main_y = main_y;
+        this._x = init_x;
+        this._y = init_y;
         this.setPosition(init_x, init_y);
 
         var angle = Phaser.Math.Angle.Between(x, y, init_x, init_y);
@@ -74,8 +78,9 @@ var Bullet = new Phaser.Class({
     {
         this.lifespan -= delta;
 
-        this.x -= this.incX * (this.speed * delta);
-        this.y -= this.incY * (this.speed * delta);
+        this._x -= this.incX * (this.speed * delta);
+        this._y -= this.incY * (this.speed * delta);
+        this.setPosition(this._x + main_x - this._start_main_x, this._y + main_y - this._start_main_y);
 
         if (this.lifespan <= 0)
         {
@@ -101,8 +106,15 @@ var Ship = new Phaser.Class({
         this.setActive(true);
         this.setVisible(true);
 
-        this.setPosition(Phaser.Math.RND.integerInRange(0, 800), Phaser.Math.RND.integerInRange(0, 600));
+        this._x = Phaser.Math.RND.integerInRange(0, 800);
+        this._y = Phaser.Math.RND.integerInRange(0, 600);
+        this.setPosition(this._x, this._y);
         this.setRotation(Phaser.Math.Angle.Random());
+    },
+
+    update: function (time, delta)
+    {
+        this.setPosition(this._x + main_x, this._y + main_y);
     }
 });
 
@@ -123,6 +135,11 @@ var Player = new Phaser.Class({
         this.setVisible(true);
 
         this.setPosition(center_x, center_y);
+    },
+
+    update: function (time, delta)
+    {
+
     }
 });
 
@@ -205,10 +222,10 @@ function create ()
 
 function update (time, delta)
 {
-    if (aKey.isDown) {main_x -= player_speed;}
-    if (dKey.isDown) {main_x += player_speed;}
-    if (sKey.isDown) {main_y -= player_speed;}
+    if (aKey.isDown) {main_x += player_speed;}
+    if (dKey.isDown) {main_x -= player_speed;}
     if (wKey.isDown) {main_y += player_speed;}
+    if (sKey.isDown) {main_y -= player_speed;}
 
     if (isDown && time > reloadingUntil)
     {
