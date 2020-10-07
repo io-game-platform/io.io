@@ -123,10 +123,11 @@ var Player = new Phaser.Class({
 
     Extends: Ship,
 
-    initialize: function Player (scene)
+    initialize: function Player (scene, is_main=false)
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
-        this.setDepth(2)
+        this.setDepth(2);
+        this.is_main = is_main;
     },
 
     spawn: function ()
@@ -139,7 +140,11 @@ var Player = new Phaser.Class({
 
     update: function (time, delta)
     {
-
+        if (this.is_main){
+            this.setRotation(Phaser.Math.Angle.Between(mouseX, mouseY, this.x, this.y) - Math.PI / 2);
+        } else {
+            Ship.update(this);
+        }
     }
 });
 
@@ -213,7 +218,7 @@ function create ()
     //  SPAWN  //
     /////////////
 
-    player_main = players.get();
+    player_main = players.get(is_main=true);
     player_main.spawn();
 
     spawn_bots(5);
@@ -238,6 +243,4 @@ function update (time, delta)
             reloadingUntil = time + reloadTime;
         }
     }
-
-    player_main.setRotation(Phaser.Math.Angle.Between(mouseX, mouseY, player_main.x, player_main.y) - Math.PI / 2);    
 }
