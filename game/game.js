@@ -4,6 +4,7 @@ var config = {
     height: 600,
     backgroundColor: '#2d2d2d',
     parent: 'phaser-example',
+    physics: {default: 'arcade'},
     scene: {
         preload: preload,
         create: create,
@@ -58,10 +59,10 @@ var Bullet = new Phaser.Class({
         this.setVisible(true);
 
         //  Bullets fire from the middle of the screen to the given x/y
-        this._start_main_x = main_x;
-        this._start_main_y = main_y;
-        this._x = init_x;
-        this._y = init_y;
+        //this._start_main_x = main_x;
+        //this._start_main_y = main_y;
+        //this._x = init_x;
+        //this._y = init_y;
         this.setPosition(init_x, init_y);
 
         var angle = Phaser.Math.Angle.Between(x, y, init_x, init_y);
@@ -78,9 +79,9 @@ var Bullet = new Phaser.Class({
     {
         this.lifespan -= delta;
 
-        this._x -= this.incX * (this.speed * delta);
-        this._y -= this.incY * (this.speed * delta);
-        this.setPosition(this._x + main_x - this._start_main_x, this._y + main_y - this._start_main_y);
+        this.x -= this.incX * (this.speed * delta);
+        this.y -= this.incY * (this.speed * delta);
+        //this.setPosition(this._x + main_x - this._start_main_x, this._y + main_y - this._start_main_y);
 
         if (this.lifespan <= 0)
         {
@@ -114,7 +115,7 @@ var Ship = new Phaser.Class({
 
     update: function (time, delta)
     {
-        this.setPosition(this._x + main_x, this._y + main_y);
+        //this.setPosition(this._x + main_x, this._y + main_y);
     }
 });
 
@@ -127,6 +128,7 @@ var Player = new Phaser.Class({
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(2);
+        this.speed = Phaser.Math.GetSpeed(400, 1);
         this.is_main = is_main;
     },
 
@@ -138,11 +140,35 @@ var Player = new Phaser.Class({
         this.setPosition(center_x, center_y);
     },
 
+    fire: function (x, y, time = 0)
+    {
+        var bullet = bullets1.get();
+
+        if (bullet)
+        {
+            bullet.fire(mouseX, mouseY, this.x, this.y);
+            reloadingUntil = time + reloadTime;
+        }
+    },
+
     update: function (time, delta)
     {
-        if (this.is_main){
-            this.setRotation(Phaser.Math.Angle.Between(mouseX, mouseY, this.x, this.y) - Math.PI / 2);
-        } else {
+        if (this.is_main)
+        {
+            var angle = Phaser.Math.Angle.Between(mouseX, mouseY, this.x, this.y);
+            this.setRotation(angle - Math.PI / 2);
+
+            this.x -= Math.cos(angle) * (this.speed * delta);
+            this.y -= Math.sin(angle) * (this.speed * delta);
+
+            if (isDown && time > reloadingUntil)
+            {
+                this.fire(mouseX, mouseY, time)
+            }
+        }
+
+        else
+        {
             Ship.update(this);
         }
     }
@@ -174,13 +200,9 @@ function create ()
 
     this.input.on('pointerdown', function (pointer) {
         isDown = true;
-        mouseX = pointer.x;
-        mouseY = pointer.y;
     });
 
     this.input.on('pointermove', function (pointer) {
-        mouseX = pointer.x;
-        mouseY = pointer.y;
     });
 
     this.input.on('pointerup', function (pointer) {
@@ -196,6 +218,9 @@ function create ()
     //  ONE-TIME SETUP  //
     //////////////////////
 
+    this.cameras.main.setBounds(0, 0, 1600, 1200);
+    var customBounds = new Phaser.Geom.Rectangle(0, 0, 1600, 1200);
+
     bullets1 = this.add.group({
         classType: Bullet,
         maxSize: 50,
@@ -208,9 +233,15 @@ function create ()
         runChildUpdate: true
     });
 
-    players = this.add.group({
+    players = this.physics.add.group({
         classType: Player,
         maxSize: maxPlayers,
+        customBoundsRectangle: customBounds,
+        collideWorldBounds: true,
+        bounceX: 1,
+        bounceY: 1,
+        velocityX: 0,
+        velocityY: 0,
         runChildUpdate: true
     });
 
@@ -222,25 +253,14 @@ function create ()
     player_main.spawn();
 
     spawn_bots(5);
+
+    this.cameras.main.startFollow(player_main);
 }
 
 
 function update (time, delta)
 {
-    if (aKey.isDown) {main_x += player_speed;}
-    if (dKey.isDown) {main_x -= player_speed;}
-    if (wKey.isDown) {main_y += player_speed;}
-    if (sKey.isDown) {main_y -= player_speed;}
-
-    if (isDown && time > reloadingUntil)
-    {
-        var bullet = bullets1.get();
-
-        if (bullet)
-        {
-            bullet.fire(mouseX, mouseY, center_x, center_y);
-
-            reloadingUntil = time + reloadTime;
-        }
-    }
+    var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
+    mouseX = pos.x;
+    mouseY = pos.y;
 }
