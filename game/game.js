@@ -58,11 +58,6 @@ var Bullet = new Phaser.Class({
         this.setActive(true);
         this.setVisible(true);
 
-        //  Bullets fire from the middle of the screen to the given x/y
-        //this._start_main_x = main_x;
-        //this._start_main_y = main_y;
-        //this._x = init_x;
-        //this._y = init_y;
         this.setPosition(init_x, init_y);
 
         var angle = Phaser.Math.Angle.Between(x, y, init_x, init_y);
@@ -81,7 +76,6 @@ var Bullet = new Phaser.Class({
 
         this.x -= this.incX * (this.speed * delta);
         this.y -= this.incY * (this.speed * delta);
-        //this.setPosition(this._x + main_x - this._start_main_x, this._y + main_y - this._start_main_y);
 
         if (this.lifespan <= 0)
         {
@@ -115,7 +109,7 @@ var Ship = new Phaser.Class({
 
     update: function (time, delta)
     {
-        //this.setPosition(this._x + main_x, this._y + main_y);
+        //TODO
     }
 });
 
@@ -238,10 +232,6 @@ function create ()
         maxSize: maxPlayers,
         customBoundsRectangle: customBounds,
         collideWorldBounds: true,
-        bounceX: 1,
-        bounceY: 1,
-        velocityX: 0,
-        velocityY: 0,
         runChildUpdate: true
     });
 
