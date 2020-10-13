@@ -82,6 +82,12 @@ var Bullet = new Phaser.Class({
             this.setActive(false);
             this.setVisible(false);
         }
+    },
+
+    destroy_bullet: function()
+    {
+        this.setActive(false);
+        this.setVisible(false);
     }
 });
 
@@ -157,7 +163,7 @@ var Player = new Phaser.Class({
 
             if (isDown && time > reloadingUntil)
             {
-                this.fire(mouseX, mouseY, time)
+                this.fire(mouseX, mouseY, time);
             }
         }
 
@@ -165,6 +171,12 @@ var Player = new Phaser.Class({
         {
             Ship.update(this);
         }
+    },
+
+    destroy_player: function ()
+    {
+        this.setActive(false);
+        this.setVisible(false);
     }
 });
 
@@ -178,6 +190,18 @@ function spawn_bots (n)
     }
 }
 
+function player_hit(player, bullet)
+{
+    player.destroy_player();
+    bullet.destroy_bullet();
+}
+
+function bot_hit(bot, bullet)
+{
+    bot.setActive(false);
+    bot.setVisible(false);
+    bullet.destroy_bullet();
+}
 
 function preload ()
 {
@@ -215,13 +239,13 @@ function create ()
     this.cameras.main.setBounds(0, 0, 1600, 1200);
     var customBounds = new Phaser.Geom.Rectangle(0, 0, 1600, 1200);
 
-    bullets1 = this.add.group({
+    bullets1 = this.physics.add.group({
         classType: Bullet,
         maxSize: 50,
         runChildUpdate: true
     });
 
-    bots = this.add.group({
+    bots = this.physics.add.group({
         classType: Ship,
         maxSize: maxBots,
         runChildUpdate: true
@@ -253,4 +277,6 @@ function update (time, delta)
     var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
     mouseX = pos.x;
     mouseY = pos.y;
+    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
+    this.physics.add.collider(players, bullets1, player_hit, null, this);
 }
