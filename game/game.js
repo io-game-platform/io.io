@@ -86,8 +86,7 @@ var Bullet = new Phaser.Class({
 
     destroy_bullet: function()
     {
-        this.setActive(false);
-        this.setVisible(false);
+        this.destroy();
     }
 });
 
@@ -171,13 +170,13 @@ var Player = new Phaser.Class({
         {
             Ship.update(this);
         }
-    },
-
+    }
+/*
     destroy_player: function ()
     {
-        this.setActive(false);
-        this.setVisible(false);
+        this.destroy();
     }
+*/
 });
 
 
@@ -189,17 +188,16 @@ function spawn_bots (n)
         bot.spawn();
     }
 }
-
+/*
 function player_hit(player, bullet)
 {
     player.destroy_player();
     bullet.destroy_bullet();
 }
-
+*/
 function bot_hit(bot, bullet)
 {
-    bot.setActive(false);
-    bot.setVisible(false);
+    bot.destroy();
     bullet.destroy_bullet();
 }
 
@@ -278,5 +276,5 @@ function update (time, delta)
     mouseX = pos.x;
     mouseY = pos.y;
     this.physics.add.collider(bots, bullets1, bot_hit, null, this);
-    this.physics.add.collider(players, bullets1, player_hit, null, this);
+    //this.physics.add.collider(players, bullets1, player_hit, null, this);
 }
