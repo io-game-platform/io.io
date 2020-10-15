@@ -99,6 +99,7 @@ var Ship = new Phaser.Class({
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(1)
+        this.speed = Phaser.Math.GetSpeed(400, 1);
     },
 
     spawn: function ()
@@ -106,15 +107,87 @@ var Ship = new Phaser.Class({
         this.setActive(true);
         this.setVisible(true);
 
-        this._x = Phaser.Math.RND.integerInRange(0, 800);
-        this._y = Phaser.Math.RND.integerInRange(0, 600);
-        this.setPosition(this._x, this._y);
-        this.setRotation(Phaser.Math.Angle.Random());
+        this.type = Phaser.Math.Between(0, 1);
+
+        if (this.type == 0) {  // Square
+            this.side_len = Phaser.Math.Between(100, 200);
+            this.start_x = Phaser.Math.Between(0, center_x * 2 - this.side_len);
+            this.start_y = Phaser.Math.Between(0, center_y * 2 - this.side_len);
+            this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
+
+            this.setPosition(this.start_x, this.start_y);
+
+            var i;
+            for (i = 0; i < this.time; i++){
+                this._move_square(i);
+            }
+        } else if (this.type == 1) {  // Circle 8
+            this.diameter = Phaser.Math.Between(100, 500);
+            this.step_value = 72;  // TODO shouldnt be separate from speed!
+            this.step = Math.PI / this.step_value;
+    
+            this.start_x = Phaser.Math.Between(this.diameter / 2, center_x * 2 - this.diameter / 2);
+            this.start_y = Phaser.Math.Between(this.diameter / 2, center_y * 2 - this.diameter / 2);
+            this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
+
+            this.setPosition(this.start_x, this.start_y);
+
+            this.direction = false;
+            var i;
+            for (i = 0; i < this.time; i++){
+                this._move_eight(i);
+            }
+        }
     },
 
     update: function (time, delta)
     {
-        //TODO
+        if (this.type == 0) {
+            this._move_square(this.time);
+        } else if (this.type == 1) {
+            this._move_eight(this.time);
+        }
+
+        this.x = Math.max(0, Math.min(800, this.x));
+        this.y = Math.max(0, Math.min(600, this.y));
+        this.time += 1;
+    },
+
+    _move_square: function (time)
+    {
+        var timed_side_len = this.side_len / this.speed;
+        var i = time % (timed_side_len * 4);
+
+        if (i < timed_side_len) {
+            this.y += this.speed;
+            this.setRotation(Math.PI);
+        } else if (i < timed_side_len * 2) {
+            this.x += this.speed;
+            this.setRotation(Math.PI / 2);
+        } else if (i < timed_side_len * 3) {
+            this.y -= this.speed;
+            this.setRotation(0);
+        } else {
+            this.x -= this.speed;
+            this.setRotation(Math.PI * 3 / 2);
+        }
+    },
+
+    _move_eight: function (time)
+    {
+        if (time % (2 * this.step_value) - Math.floor(this.step_value / 2) == 0) {
+            this.direction = !this.direction;
+        }
+
+        if (this.direction) {
+            this.x += (Math.sin((time + 1) * this.step) - Math.sin(time * this.step)) * this.diameter;
+            this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter;
+            this.setRotation(Math.cos(time * this.step) + Math.PI / 2);
+        } else {
+            this.x += -(Math.sin((time + 1) * this.step) - Math.sin(time * this.step)) * this.diameter;
+            this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter; 
+            this.setRotation(-Math.cos(time * this.step) - Math.PI / 2);
+        }
     }
 });
 
@@ -165,10 +238,9 @@ var Player = new Phaser.Class({
                 this.fire(mouseX, mouseY, time);
             }
         }
-
         else
         {
-            Ship.update(this);
+
         }
     }
 /*
