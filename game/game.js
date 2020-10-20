@@ -233,12 +233,24 @@ var Player = new Phaser.Class({
 
     fire: function (x, y, time = 0)
     {
-        var bullet = bullets1.get();
-
-        if (bullet)
+        if (this.is_main)
         {
-            bullet.fire(mouseX, mouseY, this.x, this.y);
-            reloadingUntil = time + reloadTime;
+            var bullet = bullets2.get()
+
+            if (bullet)
+            {
+                bullet.fire(mouseX, mouseY, this.x, this.y);
+                reloadingUntil = time + reloadTime;
+            }
+        }
+        else{
+            var bullet = bullets1.get();
+
+            if (bullet)
+            {
+                bullet.fire(mouseX, mouseY, this.x, this.y);
+                reloadingUntil = time + reloadTime;
+            }
         }
     },
 
@@ -269,13 +281,13 @@ var Player = new Phaser.Class({
         {
 
         }
-    }
-/*
+    },
+
     destroy_player: function ()
     {
         this.destroy();
     }
-*/
+
 });
 
 
@@ -287,18 +299,24 @@ function spawn_bots (n)
         bot.spawn();
     }
 }
-/*
+
 function player_hit(player, bullet)
 {
     player.destroy_player();
     bullet.destroy_bullet();
 }
-*/
+
 function bot_hit(bot, bullet)
 {
     bot.name.destroy();
     bot.destroy();
     bullet.destroy_bullet();
+}
+
+function bot_player_hit(bot, player)
+{
+    bot.destroy();
+    player.destroy_player();
 }
 
 function preload ()
@@ -343,6 +361,12 @@ function create ()
         runChildUpdate: true
     });
 
+    bullets2 = this.physics.add.group({
+        classType: Bullet,
+        maxSize: 50,
+        runChildUpdate: true
+    });
+
     bots = this.physics.add.group({
         classType: Ship,
         maxSize: maxBots,
@@ -376,5 +400,14 @@ function update (time, delta)
     mouseX = pos.x;
     mouseY = pos.y;
     this.physics.add.collider(bots, bullets1, bot_hit, null, this);
-    //this.physics.add.collider(players, bullets1, player_hit, null, this);
+    this.physics.add.collider(bots, bullets2, bot_hit, null, this);
+    this.physics.add.collider(bots, players, bot_player_hit, null, this);
+    /*
+    /Notes on how to handle self kills
+    /Make another bullet group (bullets2)
+    /Then make ships/bot/all other bullets in group2 using this.is_main
+    /then in an else statement in player fire, make it so that they only pull from bullet1
+    /I hope I'm understanding this right.
+    */
+    this.physics.add.collider(players, bullets1, player_hit, null, this);
 }
