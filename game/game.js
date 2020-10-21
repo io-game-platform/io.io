@@ -1,7 +1,28 @@
+// Constants
+var SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
+var MAP_WIDTH = 1600, MAP_HEIGHT = 1200;
+var center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGHT / 2;
+
+var maxBullets = 200;
+var maxBots = 50;
+var maxPlayers = 3;
+
+var reloadTime = 500;
+
+//
+var bullets1, bullets2;
+var bots;
+var players;
+var player_main;
+var reloadingUntil = 0;
+var isDown = false;
+var mouseX = 0, mouseY = 0;
+
+
 var config = {
     type: Phaser.WEBGL,
-    width: 800,
-    height: 600,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
     backgroundColor: '#2d2d2d',
     parent: 'phaser-example',
     physics: {default: 'arcade'},
@@ -13,26 +34,6 @@ var config = {
 };
 
 
-// Constants
-var center_x = 400, center_y = 300;
-var maxBots = 50;
-var maxPlayers = 3;
-var reloadTime = 500;
-var player_speed = 2;
-
-//
-var bullets1;
-var bots;
-var players;
-var player_main;
-var speed;
-var stats;
-var reloadingUntil = 0;
-var isDown = false;
-var mouseX = 0, mouseY = 0;
-var main_x = 0, main_y = 0;
-var aKey, dKey, wKey, sKey;
-
 var game = new Phaser.Game(config);
 
 
@@ -40,9 +41,7 @@ var Bullet = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Image,
 
-    initialize:
-
-    function Bullet (scene)
+    initialize: function Bullet (scene)
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'bullet1');
 
@@ -79,8 +78,7 @@ var Bullet = new Phaser.Class({
 
         if (this.lifespan <= 0)
         {
-            this.setActive(false);
-            this.setVisible(false);
+            this.destroy();
         }
     },
 
@@ -95,19 +93,16 @@ var Ship = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Image,
 
-    initialize: function Ship (scene, name = 'Bot')
+    initialize: function Bot (scene, name = 'Bot')
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
-        this.setDepth(1)
+        this.setDepth(1);
+        this.name = name;
+
+        this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
 
-        this.name = scene.add.text(this.x, this.y);
-        this.name.setText(name);
-        this.name.setFontFamily('Times New Roman')
-        this.name.setFontSize(24);
-        this.name.setActive(true);
-        this.name.setVisible(true);
-        this.nameOffset = this.name.width/2;
+        this._show_name(scene);
     },
 
     spawn: function ()
@@ -115,53 +110,57 @@ var Ship = new Phaser.Class({
         this.setActive(true);
         this.setVisible(true);
 
-        this.type = Phaser.Math.Between(0, 1);
-
         if (this.type == 0) {  // Square
-            this.side_len = Phaser.Math.Between(100, 200);
-            this.start_x = Phaser.Math.Between(0, center_x * 2 - this.side_len);
-            this.start_y = Phaser.Math.Between(0, center_y * 2 - this.side_len);
-            this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
-
-            this.setPosition(this.start_x, this.start_y);
-
-            var i;
-            for (i = 0; i < this.time; i++){
-                this._move_square(i);
-            }
+            this._init_square();
         } else if (this.type == 1) {  // Circle 8
-            this.diameter = Phaser.Math.Between(100, 500);
-            this.step_value = 72;  // TODO shouldnt be separate from speed!
-            this.step = Math.PI / this.step_value;
-
-            this.start_x = Phaser.Math.Between(this.diameter / 2, center_x * 2 - this.diameter / 2);
-            this.start_y = Phaser.Math.Between(this.diameter / 2, center_y * 2 - this.diameter / 2);
-            this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
-
-            this.setPosition(this.start_x, this.start_y);
-
-            this.direction = false;
-            var i;
-            for (i = 0; i < this.time; i++){
-                this._move_eight(i);
-            }
+            this._init_eight();
         }
     },
 
     update: function (time, delta)
     {
+        this._update_name();
+
         if (this.type == 0) {
             this._move_square(this.time);
         } else if (this.type == 1) {
             this._move_eight(this.time);
         }
 
-        this.x = Math.max(0, Math.min(800, this.x));
-        this.y = Math.max(0, Math.min(600, this.y));
-
-        this.name.setPosition(this.x-this.nameOffset, this.y+60)
+        this.x = Math.max(0, Math.min(MAP_HEIGHT, this.x));
+        this.y = Math.max(0, Math.min(MAP_WIDTH, this.y));
 
         this.time += 1;
+    },
+
+    _show_name: function (scene)
+    {
+        this.name = scene.add.text(this.x, this.y, this.name);
+        this.name.setFontFamily('Times New Roman')
+        this.name.setFontSize(24);
+        this.name.setActive(true);
+        this.name.setVisible(true);
+        this.nameOffset = this.name.width/2;
+    },
+
+    _update_name: function ()
+    {
+        this.name.setPosition(this.x-this.nameOffset, this.y+60)
+    },
+
+    _init_square: function ()
+    {
+        this.side_len = Phaser.Math.Between(100, 200);
+        this.start_x = Phaser.Math.Between(0, center_x * 2 - this.side_len);
+        this.start_y = Phaser.Math.Between(0, center_y * 2 - this.side_len);
+        this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
+
+        this.setPosition(this.start_x, this.start_y);
+
+        var i;
+        for (i = 0; i < this.time; i++){
+            this._move_square(i);
+        }
     },
 
     _move_square: function (time)
@@ -181,6 +180,25 @@ var Ship = new Phaser.Class({
         } else {
             this.x -= this.speed;
             this.setRotation(Math.PI * 3 / 2);
+        }
+    },
+
+    _init_eight: function ()
+    {
+        this.diameter = Phaser.Math.Between(100, 500);
+        this.step_value = 72;  // TODO shouldnt be separate from speed!
+        this.step = Math.PI / this.step_value;
+
+        this.start_x = Phaser.Math.Between(this.diameter / 2, center_x * 2 - this.diameter / 2);
+        this.start_y = Phaser.Math.Between(this.diameter / 2, center_y * 2 - this.diameter / 2);
+        this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
+
+        this.setPosition(this.start_x, this.start_y);
+
+        this.direction = false;
+        var i;
+        for (i = 0; i < this.time; i++){
+            this._move_eight(i);
         }
     },
 
@@ -211,16 +229,13 @@ var Player = new Phaser.Class({
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(2);
+        this.is_main = is_main;
+        this.name = name;
+
         this.speed = Phaser.Math.GetSpeed(0, 1);
         this.speedMax = 400;
-        this.is_main = is_main;
 
-        this.name = scene.add.text(this.x, this.y, name);
-        this.name.setFontFamily('Times New Roman')
-        this.name.setFontSize(24);
-        this.name.setActive(true);
-        this.name.setVisible(true);
-        this.nameOffset = this.name.width/2;
+        this._show_name(scene);
     },
 
     spawn: function ()
@@ -233,29 +248,24 @@ var Player = new Phaser.Class({
 
     fire: function (x, y, time = 0)
     {
+        var bullet;
+
         if (this.is_main)
         {
-            var bullet = bullets2.get()
-
-            if (bullet)
-            {
-                bullet.fire(mouseX, mouseY, this.x, this.y);
-                reloadingUntil = time + reloadTime;
-            }
+            bullet = bullets2.get()
         }
         else{
-            var bullet = bullets1.get();
-
-            if (bullet)
-            {
-                bullet.fire(mouseX, mouseY, this.x, this.y);
-                reloadingUntil = time + reloadTime;
-            }
+            bullet = bullets1.get();
         }
+
+        bullet.fire(mouseX, mouseY, this.x, this.y);
+        reloadingUntil = time + reloadTime;
     },
 
     update: function (time, delta)
     {
+        this._update_name();
+
         if (this.is_main)
         {
             var angle = Phaser.Math.Angle.Between(mouseX, mouseY, this.x, this.y);
@@ -270,32 +280,29 @@ var Player = new Phaser.Class({
             this.x -= Math.cos(angle) * (this.speed * delta);
             this.y -= Math.sin(angle) * (this.speed * delta);
 
-            this.name.setPosition(this.x-this.nameOffset, this.y+60)
-
             if (isDown && time > reloadingUntil)
             {
                 this.fire(mouseX, mouseY, time);
             }
-        }
-        else
-        {
-
         }
     },
 
     destroy_player: function ()
     {
         this.destroy();
-    }
+    },
 
 });
 
 
 function spawn_bots (n)
 {
+    /*
+    Spawns n bots in the bot group.
+    */
     var i;
     for (i = 0; i < n; i++) {
-        var bot = bots.get(name = 'Bot '+i);
+        var bot = bots.get(name='Bot '+i);
         bot.spawn();
     }
 }
@@ -321,6 +328,9 @@ function bot_player_hit(bot, player)
 
 function preload ()
 {
+    /*
+    Preload is called by Phaser before anything else.
+    */
     this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
 }
@@ -328,6 +338,9 @@ function preload ()
 
 function create ()
 {
+    /*
+    Create is called before the Phaser main loop starts.
+    */
     //////////////////////
     //  Declarations    //
     //////////////////////
@@ -343,27 +356,22 @@ function create ()
         isDown = false;
     });
 
-    aKey = this.input.keyboard.addKey('A');
-    dKey = this.input.keyboard.addKey('D');
-    wKey = this.input.keyboard.addKey('W');
-    sKey = this.input.keyboard.addKey('S');
-
     //////////////////////
     //  ONE-TIME SETUP  //
     //////////////////////
 
-    this.cameras.main.setBounds(0, 0, 1600, 1200);
-    var customBounds = new Phaser.Geom.Rectangle(0, 0, 1600, 1200);
+    this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
+    var customBounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
     bullets1 = this.physics.add.group({
         classType: Bullet,
-        maxSize: 50,
+        maxSize: maxBullets,
         runChildUpdate: true
     });
 
     bullets2 = this.physics.add.group({
         classType: Bullet,
-        maxSize: 50,
+        maxSize: maxBullets,
         runChildUpdate: true
     });
 
@@ -396,9 +404,13 @@ function create ()
 
 function update (time, delta)
 {
+    /*
+    Update is called by Phaser at every timestep.
+    */
     var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
     mouseX = pos.x;
     mouseY = pos.y;
+
     this.physics.add.collider(bots, bullets1, bot_hit, null, this);
     this.physics.add.collider(bots, bullets2, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_hit, null, this);
