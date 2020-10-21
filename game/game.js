@@ -292,6 +292,9 @@ var Player = new Phaser.Class({
 
 function spawn_bots (n)
 {
+    /*
+    Spawns n bots in the bot group.
+    */
     var i;
     for (i = 0; i < n; i++) {
         var bot = bots.get(name='Bot '+i);
@@ -302,6 +305,9 @@ function spawn_bots (n)
 
 function preload ()
 {
+    /*
+    Preload is called by Phaser before anything else.
+    */
     this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
 }
@@ -309,6 +315,9 @@ function preload ()
 
 function create ()
 {
+    /*
+    Create is called before the Phaser main loop starts.
+    */
     //////////////////////
     //  Declarations    //
     //////////////////////
@@ -372,6 +381,9 @@ function create ()
 
 function update (time, delta)
 {
+    /*
+    Update is called by Phaser at every timestep.
+    */
     var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
     mouseX = pos.x;
     mouseY = pos.y;
