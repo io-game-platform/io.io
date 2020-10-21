@@ -8,18 +8,15 @@ var maxBots = 50;
 var maxPlayers = 3;
 
 var reloadTime = 500;
-var player_speed = 2;
 
 //
-var bullets1;
+var bullets1, bullets2;
 var bots;
 var players;
 var player_main;
-var speed;
 var reloadingUntil = 0;
 var isDown = false;
 var mouseX = 0, mouseY = 0;
-var main_x = 0, main_y = 0;
 
 
 var config = {
@@ -105,7 +102,7 @@ var Bot = new Phaser.Class({
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
 
-        this._show_name();
+        this._show_name(scene);
     },
 
     spawn: function ()
@@ -136,7 +133,7 @@ var Bot = new Phaser.Class({
         this.time += 1;
     },
 
-    _show_name: function ()
+    _show_name: function (scene)
     {
         this.name = scene.add.text(this.x, this.y, this.name);
         this.name.setFontFamily('Times New Roman')
@@ -238,7 +235,7 @@ var Player = new Phaser.Class({
         this.speed = Phaser.Math.GetSpeed(0, 1);
         this.speedMax = 400;
 
-        this._show_name();
+        this._show_name(scene);
     },
 
     spawn: function ()
@@ -251,12 +248,14 @@ var Player = new Phaser.Class({
 
     fire: function (x, y, time = 0)
     {
+        var bullet;
+
         if (this.is_main)
         {
-            var bullet = bullets2.get()
+            bullet = bullets2.get()
         }
         else{
-            var bullet = bullets1.get();
+            bullet = bullets1.get();
         }
 
         bullet.fire(mouseX, mouseY, this.x, this.y);
@@ -373,10 +372,9 @@ function create ()
 
 function update (time, delta)
 {
+    var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
     mouseX = pos.x;
     mouseY = pos.y;
-
-    var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
 
     // this.physics.add.collider(group1, group2, reaction_function, null, this);
 }
