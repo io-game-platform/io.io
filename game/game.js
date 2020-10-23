@@ -14,6 +14,8 @@ var bullets1, bullets2;
 var bots;
 var players;
 var player_main;
+var respawn_button;
+
 var reloadingUntil = 0;
 var isDown = false;
 var mouseX = 0, mouseY = 0;
@@ -326,6 +328,10 @@ function bot_player_hit(bot, player)
     player.destroy_player();
 }
 
+function respawnClick () {
+    player_main.destroy();
+}
+
 function preload ()
 {
     /*
@@ -333,6 +339,7 @@ function preload ()
     */
     this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
+    this.load.spritesheet('button', 'assets/buttons/button_sprite_sheet.png', 193, 71);
 }
 
 
@@ -362,6 +369,15 @@ function create ()
 
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     var customBounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+    respawn_button = this.add.sprite(center_x - 95, 400, 'button', 0);
+    respawn_button.setInteractive()
+
+    respawn_button.on('pointerover', function () {
+
+        player_main.destroy();
+        
+    });
 
     bullets1 = this.physics.add.group({
         classType: Bullet,
