@@ -307,6 +307,8 @@ var Player = new Phaser.Class({
         this._hide_name();
         respawn_button.setActive(true);
         respawn_button.setVisible(true);
+        respawn_button.x = this.x;
+        respawn_button.y = this.y;
     },
 
 });
@@ -391,8 +393,6 @@ function create ()
 
         respawn_button.setActive(false);
         respawn_button.setVisible(false);
-
-        this.cameras.main.startFollow(player_main);
     });
 
     bullets1 = this.physics.add.group({
@@ -426,6 +426,11 @@ function create ()
     /////////////
 
     spawn_bots(5);
+
+    // NOTE: This is to make the camera follow the main player
+    player_main = players.get(is_main=true, name='Coolest Player');
+    player_main.spawn();
+    player_main.destroy_player();
 }
 
 
@@ -434,6 +439,7 @@ function update (time, delta)
     /*
     Update is called by Phaser at every timestep.
     */
+    this.cameras.main.startFollow(player_main);
     var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
     mouseX = pos.x;
     mouseY = pos.y;
