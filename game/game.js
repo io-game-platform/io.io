@@ -305,6 +305,8 @@ var Player = new Phaser.Class({
     {
         this.destroy();
         this._hide_name();
+        respawn_button.setActive(true);
+        respawn_button.setVisible(true);
     },
 
 });
@@ -340,10 +342,6 @@ function bot_player_hit(bot, player)
     player.destroy_player();
 }
 
-function respawnClick () {
-    player_main.destroy();
-}
-
 function preload ()
 {
     /*
@@ -351,7 +349,7 @@ function preload ()
     */
     this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
-    this.load.spritesheet('button', 'assets/buttons/button_sprite_sheet.png', 193, 71);
+    this.load.image('button', 'assets/sprites/bullets/bullet11.png');
 }
 
 
@@ -383,13 +381,18 @@ function create ()
     var customBounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
     respawn_button = this.add.sprite(center_x, center_y, 'button', 0);
-    respawn_button.setInteractive()
+    respawn_button.setInteractive();
 
     respawn_button.on('pointerdown', function () {
         player_main = players.get(is_main=true, name='Coolest Player');
         player_main.spawn();
-    
-        this.cameras.main.startFollow(player_main);    
+
+        respawn_button.setDepth(3);
+
+        respawn_button.setActive(false);
+        respawn_button.setVisible(false);
+
+        this.cameras.main.startFollow(player_main);
     });
 
     bullets1 = this.physics.add.group({
