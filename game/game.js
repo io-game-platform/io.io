@@ -145,6 +145,12 @@ var Ship = new Phaser.Class({
         this.nameOffset = this.name.width/2;
     },
 
+    _hide_name: function (scene)
+    {
+        this.name.setActive(false);
+        this.name.setVisible(false);
+    },
+
     _update_name: function ()
     {
         this.name.setPosition(this.x-this.nameOffset, this.y+60)
@@ -219,7 +225,13 @@ var Ship = new Phaser.Class({
             this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter;
             this.setRotation(-Math.cos(time * this.step) - Math.PI / 2);
         }
-    }
+    },
+
+    destroy_bot: function ()
+    {
+        this.destroy();
+        this._hide_name();
+    },
 });
 
 
@@ -292,6 +304,7 @@ var Player = new Phaser.Class({
     destroy_player: function ()
     {
         this.destroy();
+        this._hide_name();
     },
 
 });
@@ -317,14 +330,13 @@ function player_hit(player, bullet)
 
 function bot_hit(bot, bullet)
 {
-    bot.name.destroy();
-    bot.destroy();
+    bot.destroy_bot();
     bullet.destroy_bullet();
 }
 
 function bot_player_hit(bot, player)
 {
-    bot.destroy();
+    bot.destroy_bot();
     player.destroy_player();
 }
 
@@ -370,13 +382,14 @@ function create ()
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     var customBounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    respawn_button = this.add.sprite(center_x - 95, 400, 'button', 0);
+    respawn_button = this.add.sprite(center_x, center_y, 'button', 0);
     respawn_button.setInteractive()
 
-    respawn_button.on('pointerover', function () {
-
-        player_main.destroy();
-        
+    respawn_button.on('pointerdown', function () {
+        player_main = players.get(is_main=true, name='Coolest Player');
+        player_main.spawn();
+    
+        this.cameras.main.startFollow(player_main);    
     });
 
     bullets1 = this.physics.add.group({
@@ -409,12 +422,7 @@ function create ()
     //  SPAWN  //
     /////////////
 
-    player_main = players.get(is_main=true, name='Coolest Player');
-    player_main.spawn();
-
     spawn_bots(5);
-
-    this.cameras.main.startFollow(player_main);
 }
 
 
