@@ -1,10 +1,10 @@
 // Constants
 var SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
-var MAP_WIDTH = 2400, MAP_HEIGHT = 1800;
+var MAP_WIDTH = 4000, MAP_HEIGHT = 3000;
 var center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGHT / 2;
 
 var maxBullets = 200;
-var maxBots = 50;
+var maxBots = 12;
 var maxPlayers = 3;
 
 var reloadTime = 500;
@@ -16,6 +16,7 @@ var players;
 var player_main;
 var respawn_button;
 
+var numBots = 0;
 var reloadingUntil = 0;
 var isDown = false;
 var mouseX = 0, mouseY = 0;
@@ -103,15 +104,18 @@ var Ship = new Phaser.Class({
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
+        this.start_x = 0;
+        this.start_y = 0;
 
         this._show_name(scene);
     },
 
-    spawn: function ()
+    spawn: function (start_x, start_y)
     {
         this.setActive(true);
         this.setVisible(true);
-
+        this.start_x = start_x;
+        this.start_y = start_y;
         if (this.type == 0) {  // Square
             this._init_square();
         } else if (this.type == 1) {  // Circle 8
@@ -159,8 +163,6 @@ var Ship = new Phaser.Class({
     _init_square: function ()
     {
         this.side_len = Phaser.Math.Between(100, 200);
-        this.start_x = Phaser.Math.Between(0, center_x * 2 - this.side_len);
-        this.start_y = Phaser.Math.Between(0, center_y * 2 - this.side_len);
         this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
 
         this.setPosition(this.start_x, this.start_y);
@@ -197,8 +199,6 @@ var Ship = new Phaser.Class({
         this.step_value = 72;  // TODO shouldnt be separate from speed!
         this.step = Math.PI / this.step_value;
 
-        this.start_x = Phaser.Math.Between(this.diameter / 2, center_x * 2 - this.diameter / 2);
-        this.start_y = Phaser.Math.Between(this.diameter / 2, center_y * 2 - this.diameter / 2);
         this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
 
         this.setPosition(this.start_x, this.start_y);
@@ -231,6 +231,7 @@ var Ship = new Phaser.Class({
     {
         this.destroy();
         this._hide_name();
+        numBots -= 1;
     },
 });
 
@@ -319,10 +320,11 @@ function spawn_bots (n)
     /*
     Spawns n bots in the bot group.
     */
+    numBots += n;
     var i;
     for (i = 0; i < n; i++) {
-        var bot = bots.get(name='Bot '+i);
-        bot.spawn();
+        var bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
+        bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
     }
 }
 
@@ -428,11 +430,15 @@ function create ()
         runChildUpdate: true
     });
 
+    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
+    this.physics.add.collider(bots, bullets2, bot_hit, null, this);
+    this.physics.add.collider(bots, players, bot_player_hit, null, this);
+
     /////////////
     //  SPAWN  //
     /////////////
 
-    spawn_bots(5);
+    //spawn_bots(maxBots);
 
     // NOTE: This is to make the camera follow the main player
     player_main = players.get(is_main=true, name='Coolest Player');
@@ -451,9 +457,10 @@ function update (time, delta)
     mouseX = pos.x;
     mouseY = pos.y;
 
-    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
-    this.physics.add.collider(bots, bullets2, bot_hit, null, this);
-    this.physics.add.collider(bots, players, bot_player_hit, null, this);
+    if(numBots<maxBots)
+    {
+        spawn_bots(maxBots-numBots);
+    }
     /*
     /Notes on how to handle self kills
     /Make another bullet group (bullets2)
