@@ -1,6 +1,6 @@
 // Constants
 var SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
-var MAP_WIDTH = 1600, MAP_HEIGHT = 1200;
+var MAP_WIDTH = 2400, MAP_HEIGHT = 1800;
 var center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGHT / 2;
 
 var maxBullets = 200;
@@ -353,6 +353,7 @@ function preload ()
     this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
     this.load.image('button', 'assets/sprites/bullets/bullet11.png');
+    this.load.image('star', 'assets/sprites/yellow_ball.png');
 }
 
 
@@ -382,6 +383,11 @@ function create ()
 
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     var customBounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+    for(i=0;i<80;i++)
+    {
+        this.add.sprite(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
+    }
 
     respawn_button = this.add.sprite(center_x, center_y, 'button', 0);
     respawn_button.setInteractive();
