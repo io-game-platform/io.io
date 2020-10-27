@@ -344,6 +344,13 @@ function bot_player_hit(bot, player)
     player.destroy_player();
 }
 
+function shoot_nearest(bot, closest)
+{
+    var bullet = bullets1.get()
+    //add delay routine in here so bots aren't Constantly shooting
+    bullet.fire(closest.x, closest.y, bot.x, bot.y);
+}
+
 function preload ()
 {
     /*
@@ -430,7 +437,7 @@ function create ()
     // NOTE: This is to make the camera follow the main player
     player_main = players.get(is_main=true, name='Coolest Player');
     player_main.spawn();
-    player_main.destroy_player();
+    //player_main.destroy_player();
 }
 
 
@@ -455,4 +462,8 @@ function update (time, delta)
     /I hope I'm understanding this right.
     */
     this.physics.add.collider(players, bullets1, player_hit, null, this);
+    bots.children.each(function(bot) {
+        var closest = this.physics.closest(bot);
+        shoot_nearest(bot, closest);
+    }, this);
 }
