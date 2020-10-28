@@ -16,7 +16,6 @@ var players;
 var player_main;
 var respawn_button;
 
-var reloadingUntil = 0;
 var isDown = false;
 var mouseX = 0, mouseY = 0;
 
@@ -103,6 +102,8 @@ var Ship = new Phaser.Class({
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
+
+        this.reloadingUntil = 0;
 
         this._show_name(scene);
     },
@@ -232,6 +233,12 @@ var Ship = new Phaser.Class({
         this.destroy();
         this._hide_name();
     },
+    shoot_nearest: function (closest)
+    {
+        var bullet = bullets1.get()
+        //add delay routine in here so bots aren't Constantly shooting
+        bullet.fire(closest.x, closest.y, this.x, this.y);
+    },
 });
 
 
@@ -273,7 +280,7 @@ var Player = new Phaser.Class({
         }
 
         bullet.fire(mouseX, mouseY, this.x, this.y);
-        reloadingUntil = time + reloadTime;
+        this.reloadingUntil = time + reloadTime;
     },
 
     update: function (time, delta)
@@ -294,7 +301,7 @@ var Player = new Phaser.Class({
             this.x -= Math.cos(angle) * (this.speed * delta);
             this.y -= Math.sin(angle) * (this.speed * delta);
 
-            if (isDown && time > reloadingUntil)
+            if (isDown && time > this.reloadingUntil)
             {
                 this.fire(mouseX, mouseY, time);
             }
@@ -347,7 +354,7 @@ function bot_player_hit(bot, player)
 function shoot_nearest(bot, closest)
 {
     var bullet = bullets1.get()
-    //add delay routine in here so bots aren't Constantly shoo
+    //add delay routine in here so bots aren't Constantly shooting
     bullet.fire(closest.x, closest.y, bot.x, bot.y);
 }
 
@@ -464,6 +471,6 @@ function update (time, delta)
     this.physics.add.collider(players, bullets1, player_hit, null, this);
     bots.children.each(function(bot) {
         var closest = this.physics.closest(bot);
-        shoot_nearest(bot, closest);
+        bot.shoot_nearest(closest);
     }, this);
 }
