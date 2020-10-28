@@ -16,6 +16,7 @@ var players;
 var player_main;
 var respawn_button;
 
+var reloadingUntil = 0;
 var isDown = false;
 var mouseX = 0, mouseY = 0;
 
@@ -102,8 +103,6 @@ var Ship = new Phaser.Class({
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
-
-        this.reloadingUntil = 0;
 
         this._show_name(scene);
     },
@@ -233,18 +232,8 @@ var Ship = new Phaser.Class({
         this.destroy();
         this._hide_name();
     },
-    shoot_nearest: function (closest, time)
-    {
-
-        if (time > this.reloadingUntil)
-        {
-            var bullet = bullets1.get()
-            //add delay routine in here so bots aren't Constantly shooting
-            bullet.fire(closest.x, closest.y, this.x, this.y);
-            this.reloadingUntil = time + reloadTime;
-        }
-    },
 });
+
 
 var Player = new Phaser.Class({
 
@@ -259,7 +248,6 @@ var Player = new Phaser.Class({
 
         this.speed = Phaser.Math.GetSpeed(0, 1);
         this.speedMax = 400;
-        this.reloadingUntil = 0;
 
         this._show_name(scene);
     },
@@ -285,7 +273,7 @@ var Player = new Phaser.Class({
         }
 
         bullet.fire(mouseX, mouseY, this.x, this.y);
-        this.reloadingUntil = time + reloadTime;
+        reloadingUntil = time + reloadTime;
     },
 
     update: function (time, delta)
@@ -306,7 +294,7 @@ var Player = new Phaser.Class({
             this.x -= Math.cos(angle) * (this.speed * delta);
             this.y -= Math.sin(angle) * (this.speed * delta);
 
-            if (isDown && time > this.reloadingUntil)
+            if (isDown && time > reloadingUntil)
             {
                 this.fire(mouseX, mouseY, time);
             }
@@ -354,6 +342,13 @@ function bot_player_hit(bot, player)
 {
     bot.destroy_bot();
     player.destroy_player();
+}
+
+function shoot_nearest(bot, closest)
+{
+    var bullet = bullets1.get()
+    //add delay routine in here so bots aren't Constantly shoo
+    bullet.fire(closest.x, closest.y, bot.x, bot.y);
 }
 
 function preload ()
@@ -456,7 +451,7 @@ function update (time, delta)
     mouseX = pos.x;
     mouseY = pos.y;
 
-    //this.physics.add.collider(bots, bullets1, bot_hit, null, this);
+    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
     this.physics.add.collider(bots, bullets2, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_hit, null, this);
     /*
@@ -469,6 +464,6 @@ function update (time, delta)
     this.physics.add.collider(players, bullets1, player_hit, null, this);
     bots.children.each(function(bot) {
         var closest = this.physics.closest(bot);
-        bot.shoot_nearest(closest, time);
+        shoot_nearest(bot, closest);
     }, this);
 }
