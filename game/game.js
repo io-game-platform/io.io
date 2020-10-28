@@ -347,7 +347,7 @@ function bot_player_hit(bot, player)
 function shoot_nearest(bot, closest)
 {
     var bullet = bullets1.get()
-    //add delay routine in here so bots aren't Constantly shooting
+    //add delay routine in here so bots aren't Constantly shoo
     bullet.fire(closest.x, closest.y, bot.x, bot.y);
 }
 
