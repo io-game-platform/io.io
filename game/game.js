@@ -235,9 +235,14 @@ var Ship = new Phaser.Class({
     },
     shoot_nearest: function (closest)
     {
-        var bullet = bullets1.get()
-        //add delay routine in here so bots aren't Constantly shooting
-        bullet.fire(closest.x, closest.y, this.x, this.y);
+
+        if (time > this.reloadingUntil)
+        {
+            var bullet = bullets1.get()
+            //add delay routine in here so bots aren't Constantly shooting
+            bullet.fire(closest.x, closest.y, this.x, this.y);
+            this.reloadingUntil = time + reloadTime;
+        }
     },
 });
 
