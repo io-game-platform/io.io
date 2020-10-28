@@ -14,6 +14,8 @@ var bullets1, bullets2;
 var bots;
 var players;
 var player_main;
+var respawn_button;
+
 var reloadingUntil = 0;
 var isDown = false;
 var mouseX = 0, mouseY = 0;
@@ -89,7 +91,7 @@ var Bullet = new Phaser.Class({
 });
 
 
-var Bot = new Phaser.Class({
+var Ship = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Image,
 
@@ -141,6 +143,12 @@ var Bot = new Phaser.Class({
         this.name.setActive(true);
         this.name.setVisible(true);
         this.nameOffset = this.name.width/2;
+    },
+
+    _hide_name: function (scene)
+    {
+        this.name.setActive(false);
+        this.name.setVisible(false);
     },
 
     _update_name: function ()
@@ -217,13 +225,19 @@ var Bot = new Phaser.Class({
             this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter;
             this.setRotation(-Math.cos(time * this.step) - Math.PI / 2);
         }
-    }
+    },
+
+    destroy_bot: function ()
+    {
+        this.destroy();
+        this._hide_name();
+    },
 });
 
 
 var Player = new Phaser.Class({
 
-    Extends: Bot,
+    Extends: Ship,
 
     initialize: function Player (scene, is_main=false, name='player')
     {
@@ -287,6 +301,16 @@ var Player = new Phaser.Class({
         }
     },
 
+    destroy_player: function ()
+    {
+        this.destroy();
+        this._hide_name();
+        respawn_button.setActive(true);
+        respawn_button.setVisible(true);
+        respawn_button.x = this.x;
+        respawn_button.y = this.y;
+    },
+
 });
 
 
@@ -302,6 +326,30 @@ function spawn_bots (n)
     }
 }
 
+function player_hit(player, bullet)
+{
+    player.destroy_player();
+    bullet.destroy_bullet();
+}
+
+function bot_hit(bot, bullet)
+{
+    bot.destroy_bot();
+    bullet.destroy_bullet();
+}
+
+function bot_player_hit(bot, player)
+{
+    bot.destroy_bot();
+    player.destroy_player();
+}
+
+function shoot_nearest(bot, closest)
+{
+    var bullet = bullets1.get()
+    //add delay routine in here so bots aren't Constantly shoo
+    bullet.fire(closest.x, closest.y, bot.x, bot.y);
+}
 
 function preload ()
 {
@@ -310,6 +358,7 @@ function preload ()
     */
     this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
+    this.load.image('button', 'assets/sprites/bullets/bullet11.png');
 }
 
 
@@ -340,6 +389,19 @@ function create ()
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     var customBounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
+    respawn_button = this.add.sprite(center_x, center_y, 'button', 0);
+    respawn_button.setInteractive();
+
+    respawn_button.on('pointerdown', function () {
+        player_main = players.get(is_main=true, name='Coolest Player');
+        player_main.spawn();
+
+        respawn_button.setDepth(3);
+
+        respawn_button.setActive(false);
+        respawn_button.setVisible(false);
+    });
+
     bullets1 = this.physics.add.group({
         classType: Bullet,
         maxSize: maxBullets,
@@ -353,7 +415,7 @@ function create ()
     });
 
     bots = this.physics.add.group({
-        classType: Bot,
+        classType: Ship,
         maxSize: maxBots,
         runChildUpdate: true
     });
@@ -370,12 +432,12 @@ function create ()
     //  SPAWN  //
     /////////////
 
-    player_main = players.get(is_main=true, name='Coolest Player');
-    player_main.spawn();
-
     spawn_bots(5);
 
-    this.cameras.main.startFollow(player_main);
+    // NOTE: This is to make the camera follow the main player
+    player_main = players.get(is_main=true, name='Coolest Player');
+    player_main.spawn();
+    //player_main.destroy_player();
 }
 
 
@@ -384,9 +446,24 @@ function update (time, delta)
     /*
     Update is called by Phaser at every timestep.
     */
+    this.cameras.main.startFollow(player_main);
     var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
     mouseX = pos.x;
     mouseY = pos.y;
 
-    // this.physics.add.collider(group1, group2, reaction_function, null, this);
+    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
+    this.physics.add.collider(bots, bullets2, bot_hit, null, this);
+    this.physics.add.collider(bots, players, bot_player_hit, null, this);
+    /*
+    /Notes on how to handle self kills
+    /Make another bullet group (bullets2)
+    /Then make ships/bot/all other bullets in group2 using this.is_main
+    /then in an else statement in player fire, make it so that they only pull from bullet1
+    /I hope I'm understanding this right.
+    */
+    this.physics.add.collider(players, bullets1, player_hit, null, this);
+    bots.children.each(function(bot) {
+        var closest = this.physics.closest(bot);
+        shoot_nearest(bot, closest);
+    }, this);
 }
