@@ -233,7 +233,7 @@ var Ship = new Phaser.Class({
         this.destroy();
         this._hide_name();
     },
-    shoot_nearest: function (closest)
+    shoot_nearest: function (closest, time)
     {
 
         if (time > this.reloadingUntil)
@@ -245,7 +245,6 @@ var Ship = new Phaser.Class({
         }
     },
 });
-
 
 var Player = new Phaser.Class({
 
@@ -476,6 +475,6 @@ function update (time, delta)
     this.physics.add.collider(players, bullets1, player_hit, null, this);
     bots.children.each(function(bot) {
         var closest = this.physics.closest(bot);
-        bot.shoot_nearest(closest);
+        bot.shoot_nearest(closest, time);
     }, this);
 }
