@@ -320,14 +320,30 @@ var Player = new Phaser.Class({
 });
 
 class Leaderboard {
-    constructor (scene, n_entries) {
+    constructor (scene, n_entries, bots, players) {
+        this.scene = scene;
         this.n_entries = n_entries;
+        this.bots = bots;
+        this.players = players;
 
         this.entry = [];
-        
+
         for (var i = 0; i < n_entries; i++) {
             this.entry[i] = scene.add.text(SCREEN_WIDTH - 200, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
             this.entry[i].setScrollFactor(0, 0);
+        }
+    }
+
+    _list_ships () {
+        // make a list of all bots and players
+        return this.bots.getChildren().concat(this.players.getChildren());
+    }
+
+    update () {
+        var ships = this._list_ships();
+
+        for (var i = 0; i < this.n_entries; i++) {
+            this.entry[i].text = ships[i]._name;
         }
     }
 };
@@ -469,7 +485,7 @@ function create ()
         runChildUpdate: true
     });
 
-    leaderboard = new Leaderboard(this, 5);
+    leaderboard = new Leaderboard(this, 5, bots, players);
 
     this.physics.add.collider(bots, bullets1, bot_hit, null, this);
     this.physics.add.collider(bots, bullets2, bot_hit, null, this);
@@ -500,12 +516,8 @@ function update (time, delta)
     {
         spawn_bots(maxBots-numBots);
     }
-    /*
-    /Notes on how to handle self kills
-    /Make another bullet group (bullets2)
-    /Then make ships/bot/all other bullets in group2 using this.is_main
-    /then in an else statement in player fire, make it so that they only pull from bullet1
-    /I hope I'm understanding this right.
-    */
+
+    leaderboard.update();
+
     this.physics.add.collider(players, bullets1, player_hit, null, this);
 }
