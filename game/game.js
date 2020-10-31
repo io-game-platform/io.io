@@ -14,7 +14,7 @@ var bullets1, bullets2;
 var bots;
 var players;
 var player_main;
-var respawn_button;
+var respawn_button, name_input;
 
 var numBots = 0;
 var reloadingUntil = 0;
@@ -306,10 +306,10 @@ var Player = new Phaser.Class({
     {
         this.destroy();
         this._hide_name();
+        name_input.setActive(true);
+        name_input.setVisible(true);
         respawn_button.setActive(true);
         respawn_button.setVisible(true);
-        respawn_button.x = this.x;
-        respawn_button.y = this.y;
     },
 
 });
@@ -356,6 +356,14 @@ function preload ()
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
     this.load.image('button', 'assets/sprites/bullets/bullet11.png');
     this.load.image('star', 'assets/sprites/yellow_ball.png');
+
+	this.load.scenePlugin({
+		key: 'rexuiplugin',
+		url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
+		sceneKey: 'rexUI'
+	});
+	
+	this.load.plugin('rextexteditplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rextexteditplugin.min.js', true);
 }
 
 
@@ -391,6 +399,13 @@ function create ()
         this.add.sprite(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
     }
 
+	name_input = this.add.text(center_x, center_y, 'Enter name here', { fixedWidth: 150, fixedHeight: 36 });
+	name_input.setOrigin(0.5, 0.5);
+
+	name_input.setInteractive().on('pointerdown', () => {
+		this.rexUI.edit(name_input)
+	});
+
     respawn_button = this.add.sprite(center_x, center_y, 'button', 0);
     respawn_button.setInteractive();
 
@@ -400,6 +415,8 @@ function create ()
 
         respawn_button.setDepth(3);
 
+        name_input.setActive(false);
+        name_input.setVisible(false);
         respawn_button.setActive(false);
         respawn_button.setVisible(false);
     });
