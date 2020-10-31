@@ -433,6 +433,7 @@ function create ()
     this.physics.add.collider(bots, bullets1, bot_hit, null, this);
     this.physics.add.collider(bots, bullets2, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_hit, null, this);
+    this.physics.add.collider(players, bullets1, player_hit, null, this);
 
     /////////////
     //  SPAWN  //
@@ -461,12 +462,4 @@ function update (time, delta)
     {
         spawn_bots(maxBots-numBots);
     }
-    /*
-    /Notes on how to handle self kills
-    /Make another bullet group (bullets2)
-    /Then make ships/bot/all other bullets in group2 using this.is_main
-    /then in an else statement in player fire, make it so that they only pull from bullet1
-    /I hope I'm understanding this right.
-    */
-    this.physics.add.collider(players, bullets1, player_hit, null, this);
 }
