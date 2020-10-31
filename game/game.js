@@ -102,7 +102,7 @@ var Ship = new Phaser.Class({
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(1);
         this._name = name;
-        this._score = 0;
+        this._score = -5;
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
@@ -350,6 +350,8 @@ class Leaderboard {
     update () {
         var ships = this._list_ships();
 
+        ships.sort(function(a, b){return b._score-a._score});
+
         for (var i = 0; i < this.n_entries; i++) {
             this.entry[i][0].text = ships[i]._name;
             this.entry[i][1].text = ships[i]._score;
@@ -526,11 +528,6 @@ function update (time, delta)
     {
         spawn_bots(maxBots-numBots);
     }
-<<<<<<< HEAD
 
     leaderboard.update();
-
-    this.physics.add.collider(players, bullets1, player_hit, null, this);
-=======
->>>>>>> fb85d7f8c3f820a1c58e5162b92699155c59f3cb
 }
