@@ -306,6 +306,10 @@ var Player = new Phaser.Class({
     {
         this.destroy();
         this._hide_name();
+
+        player_main.x = center_x;
+        player_main.y = center_y;
+
         name_input.setActive(true);
         name_input.setVisible(true);
         respawn_button.setActive(true);
@@ -456,8 +460,6 @@ function create ()
     /////////////
 
     //spawn_bots(maxBots);
-
-    // NOTE: This is to make the camera follow the main player
     player_main = players.get(is_main=true, name='Coolest Player');
     player_main.spawn();
     player_main.destroy_player();
