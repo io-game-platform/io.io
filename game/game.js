@@ -15,6 +15,7 @@ var bots;
 var players;
 var player_main;
 var respawn_button, name_input;
+var leaderboard;
 
 var numBots = 0;
 var reloadingUntil = 0;
@@ -318,6 +319,14 @@ var Player = new Phaser.Class({
 
 });
 
+class Leaderboard {
+    constructor (scene, n_entries) {
+        this.n_entries = n_entries;
+
+        this.entry = scene.add.text(SCREEN_WIDTH - 100, 10, '1', { fixedWidth: 150, fixedHeight: 36 });
+    }
+};
+
 
 function spawn_bots (n)
 {
@@ -455,6 +464,8 @@ function create ()
         collideWorldBounds: true,
         runChildUpdate: true
     });
+
+    leaderboard = new Leaderboard(this, 5);
 
     this.physics.add.collider(bots, bullets1, bot_hit, null, this);
     this.physics.add.collider(bots, bullets2, bot_hit, null, this);
