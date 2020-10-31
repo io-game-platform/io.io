@@ -327,6 +327,7 @@ class Leaderboard {
         
         for (var i = 0; i < n_entries; i++) {
             this.entry[i] = scene.add.text(SCREEN_WIDTH - 200, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
+            this.entry[i].setScrollFactor(0, 0);
         }
     }
 };
