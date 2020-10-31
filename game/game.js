@@ -102,6 +102,7 @@ var Ship = new Phaser.Class({
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(1);
         this._name = name;
+        this._score = 0;
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
@@ -247,6 +248,7 @@ var Player = new Phaser.Class({
         this.setDepth(2);
         this.is_main = is_main;
         this._name = name;
+        this._score = 0;
 
         this.speed = Phaser.Math.GetSpeed(0, 1);
         this.speedMax = 400;
@@ -329,8 +331,14 @@ class Leaderboard {
         this.entry = [];
 
         for (var i = 0; i < n_entries; i++) {
-            this.entry[i] = scene.add.text(SCREEN_WIDTH - 200, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
-            this.entry[i].setScrollFactor(0, 0);
+            var e = [];
+            e[0] = scene.add.text(SCREEN_WIDTH - 200, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
+            e[1] = scene.add.text(SCREEN_WIDTH - 50, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
+
+            e[0].setScrollFactor(0, 0);
+            e[1].setScrollFactor(0, 0);
+
+            this.entry[i] = e;
         }
     }
 
@@ -343,7 +351,8 @@ class Leaderboard {
         var ships = this._list_ships();
 
         for (var i = 0; i < this.n_entries; i++) {
-            this.entry[i].text = ships[i]._name;
+            this.entry[i][0].text = ships[i]._name;
+            this.entry[i][1].text = ships[i]._score;
         }
     }
 };
