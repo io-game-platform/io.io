@@ -323,7 +323,11 @@ class Leaderboard {
     constructor (scene, n_entries) {
         this.n_entries = n_entries;
 
-        this.entry = scene.add.text(SCREEN_WIDTH - 100, 10, '1', { fixedWidth: 150, fixedHeight: 36 });
+        this.entry = [];
+        
+        for (var i = 0; i < n_entries; i++) {
+            this.entry[i] = scene.add.text(SCREEN_WIDTH - 200, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
+        }
     }
 };
 
@@ -334,8 +338,7 @@ function spawn_bots (n)
     Spawns n bots in the bot group.
     */
     numBots += n;
-    var i;
-    for (i = 0; i < n; i++) {
+    for (var i = 0; i < n; i++) {
         var bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
         bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
     }
