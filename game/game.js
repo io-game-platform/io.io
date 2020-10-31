@@ -100,7 +100,7 @@ var Ship = new Phaser.Class({
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(1);
-        this.name = name;
+        this._name = name;
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
@@ -141,7 +141,7 @@ var Ship = new Phaser.Class({
 
     _show_name: function (scene)
     {
-        this.name = scene.add.text(this.x, this.y, this.name);
+        this.name = scene.add.text(this.x, this.y, this._name);
         this.name.setFontFamily('Times New Roman')
         this.name.setFontSize(24);
         this.name.setActive(true);
@@ -245,7 +245,7 @@ var Player = new Phaser.Class({
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(2);
         this.is_main = is_main;
-        this.name = name;
+        this._name = name;
 
         this.speed = Phaser.Math.GetSpeed(0, 1);
         this.speedMax = 400;
@@ -414,7 +414,12 @@ function create ()
     respawn_button.setInteractive();
 
     respawn_button.on('pointerdown', function () {
-        player_main = players.get(is_main=true, name='Coolest Player');
+        var player_name = 'Coolest Player';
+        if (!(name_input.text === 'Enter name here')){
+            player_name = name_input.text;
+        }
+
+        player_main = players.get(is_main=true, name=player_name);
         player_main.spawn();
 
         respawn_button.setDepth(3);
