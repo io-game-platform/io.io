@@ -499,6 +499,7 @@ function create ()
     this.physics.add.collider(bots, bullets1, bot_hit, null, this);
     this.physics.add.collider(bots, bullets2, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_hit, null, this);
+    this.physics.add.collider(players, bullets1, player_hit, null, this);
 
     /////////////
     //  SPAWN  //
@@ -525,8 +526,11 @@ function update (time, delta)
     {
         spawn_bots(maxBots-numBots);
     }
+<<<<<<< HEAD
 
     leaderboard.update();
 
     this.physics.add.collider(players, bullets1, player_hit, null, this);
+=======
+>>>>>>> fb85d7f8c3f820a1c58e5162b92699155c59f3cb
 }
