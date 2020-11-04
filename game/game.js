@@ -24,7 +24,7 @@ var rightDown = false;
 var mouseX = 0, mouseY = 0;
 
 
-var config = {
+export var config = {
     type: Phaser.WEBGL,
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
