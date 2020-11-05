@@ -157,6 +157,24 @@ var Bot = new Phaser.Class({
         this.time += 1;
     },
 
+    fire: function (x, y, time = 0, lifespan = 1000)
+    {
+        var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=lifespan);
+
+        bullet.fire(x, y, this.x, this.y);
+        this.reloadingUntil = time + reloadTime;
+    },
+
+    blast: function (x, y, time = 0)
+    {
+        for(var i=0; i<BLAST_SIZE+1; i++)
+        {
+            bullet = bullets.get(owner=this._name, sprite='bullet2', lifespan=400)
+            bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
+        }
+        this.reloadingUntil = time + reloadTime;
+    },
+
     _show_name: function (scene)
     {
         this.name = scene.add.text(this.x, this.y, this._name);
@@ -258,9 +276,7 @@ var Bot = new Phaser.Class({
 
         if (time > this.reloadingUntil)
         {
-            var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=500)
-            bullet.fire(closest.x, closest.y, this.x, this.y);
-            this.reloadingUntil = time + reloadTime + 1000;
+            this.fire(closest.x, closest.y, time, 500);
         }
     },
 
@@ -296,24 +312,6 @@ var Player = new Phaser.Class({
         this.setVisible(true);
 
         this.setPosition(center_x, center_y);
-    },
-
-    fire: function (x, y, time = 0)
-    {
-        var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=1000);
-
-        bullet.fire(mouseX, mouseY, this.x, this.y);
-        this.reloadingUntil = time + reloadTime;
-    },
-
-    blast: function (x, y, time = 0)
-    {
-        for(var i=0; i<BLAST_SIZE+1; i++)
-        {
-            bullet = bullets.get(owner=this._name, sprite='bullet2', lifespan=400)
-            bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
-        }
-        this.reloadingUntil = time + reloadTime;
     },
 
     update: function (time, delta)
