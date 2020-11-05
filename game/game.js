@@ -3,24 +3,22 @@ var SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
 var MAP_WIDTH = 4000, MAP_HEIGHT = 3000;
 var center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGHT / 2;
 
-var maxBullets = 200;
-var maxBots = 12;
 var maxPlayers = 3;
+var maxBots = 12;
+var maxBullets = 200;
 
 var reloadTime = 500;
+var BLAST_SIZE = 4;
 
 //
+var players, bots;
 var bullets1, bullets2;
-var bots;
-var players;
-var player_main;
 var respawn_button, name_input;
 var leaderboard;
 
-var numBots = 0;
-var reloadingUntil = 0;
-var leftDown = false;
-var rightDown = false;
+var player_main;
+var numBots = 0, reloadingUntil = 0;
+var leftDown = false, rightDown = false;
 var mouseX = 0, mouseY = 0;
 
 var config = {
@@ -184,7 +182,7 @@ var Bot = new Phaser.Class({
     _init_square: function ()
     {
         this.side_len = Phaser.Math.Between(100, 200);
-        this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
+        this.time = Phaser.Math.Between(0, 100);
 
         this.setPosition(this.start_x, this.start_y);
 
@@ -217,10 +215,10 @@ var Bot = new Phaser.Class({
     _init_eight: function ()
     {
         this.diameter = Phaser.Math.Between(100, 500);
-        this.step_value = 72;  // TODO shouldnt be separate from speed!
+        this.step_value = 72;
         this.step = Math.PI / this.step_value;
 
-        this.time = Phaser.Math.Between(0, 100);  // TODO Dont know if actually affects starting pos
+        this.time = Phaser.Math.Between(0, 100);
 
         this.setPosition(this.start_x, this.start_y);
 
@@ -318,11 +316,10 @@ var Player = new Phaser.Class({
 
     blast: function (x, y, time = 0)
     {
-        var n = 4
-        for(var i=0; i<5; i++)
+        for(var i=0; i<BLAST_SIZE+1; i++)
         {
             bullet = bullets2.get(owner=this._name, sprite='bullet2', lifespan=400)
-            bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, n)
+            bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
         }
         this.reloadingUntil = time + reloadTime;
     },
@@ -336,22 +333,22 @@ var Player = new Phaser.Class({
             var angle = Phaser.Math.Angle.Between(mouseX, mouseY, this.x, this.y);
             this.setRotation(angle - Math.PI / 2);
 
-            var speed = (Math.abs(Math.abs(mouseX)-Math.abs(this.x)) + Math.abs(Math.abs(mouseY)-Math.abs(this.y)));
-            if (speed > this.speedMax)
-            {
-                speed = this.speedMax;
-            }
-            this.speed = Phaser.Math.GetSpeed(speed, 1);
+            this.speed = (Math.abs(Math.abs(mouseX)-Math.abs(this.x)) + Math.abs(Math.abs(mouseY)-Math.abs(this.y)));
+            this.speed = Phaser.Math.GetSpeed(Math.max(this.speed, this.speedMax), 1);
+
             this.x -= Math.cos(angle) * (this.speed * delta);
             this.y -= Math.sin(angle) * (this.speed * delta);
 
-            if (leftDown && time > this.reloadingUntil)
+            if (time > this.reloadingUntil)
             {
-                this.fire(mouseX, mouseY, time);
-            }
-            if (rightDown && time > this.reloadingUntil)
-            {
-                this.blast(mouseX, mouseY, time)
+                if (leftDown)
+                {
+                    this.fire(mouseX, mouseY, time);
+                }
+                if (rightDown)
+                {
+                    this.blast(mouseX, mouseY, time)
+                }
             }
         }
     },
@@ -372,6 +369,7 @@ var Player = new Phaser.Class({
 
 });
 
+
 class Leaderboard {
     constructor (scene, n_entries, bots, players) {
         this.scene = scene;
@@ -380,7 +378,6 @@ class Leaderboard {
         this.players = players;
 
         this.entry = [];
-
         for (var i = 0; i < n_entries; i++) {
             var e = [];
             e[0] = scene.add.text(SCREEN_WIDTH - 200, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
@@ -394,14 +391,13 @@ class Leaderboard {
     }
 
     _list_ships () {
-        // make a list of all bots and players
+        // make a combined list of all bots and players
         return this.bots.getChildren().concat(this.players.getChildren());
     }
 
     update () {
         var ships = this._list_ships();
-
-        ships.sort(function(a, b){return b._score-a._score});
+        ships.sort(function(a, b){return b._score - a._score});
 
         for (var i = 0; i < this.n_entries; i++) {
             this.entry[i][0].text = ships[i]._name;
@@ -414,7 +410,7 @@ class Leaderboard {
 function spawn_bots (n)
 {
     /*
-    Spawns n bots in the bot group.
+    Spawns n bots into the bot group.
     */
     numBots += n;
     for (var i = 0; i < n; i++) {
@@ -438,7 +434,7 @@ function bot_hit(bot, bullet)
     }
 }
 
-function bot_player_hit(bot, player)
+function bot_player_collision(bot, player)
 {
     bot.destroy_bot();
     player.destroy_player();
@@ -450,6 +446,7 @@ function preload ()
     Preload is called by Phaser before anything else.
     */
     this.input.setDefaultCursor('url(assets/input/cursors/sc2/SC2-target-none.cur), pointer');
+    
     this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
     this.load.image('bullet2', 'assets/sprites/bullets/bullet4.png');
@@ -461,7 +458,6 @@ function preload ()
         url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
         sceneKey: 'rexUI'
     });
-    
     this.load.plugin('rextexteditplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rextexteditplugin.min.js', true);
 }
 
@@ -478,52 +474,66 @@ function create ()
     // Prevent right click context menu
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
+    // Set global variables for pointer control
     this.input.on('pointerdown', function (pointer) {
-        if(pointer.leftButtonDown())
-        {
-            leftDown = true;
-        }
-        if(pointer.rightButtonDown())
-        {
-            rightDown = true;
-        }
+        leftDown = pointer.leftButtonDown();
+        rightDown = pointer.rightButtonDown();
     });
-
     this.input.on('pointerup', function (pointer) {
-        if(!pointer.leftButtonDown())
-        {
-            leftDown = false;
-        }
-        if(!pointer.rightButtonDown())
-        {
-            rightDown = false;
-        }
+        leftDown = pointer.leftButtonDown();
+        rightDown = pointer.rightButtonDown();
     });
-
-
 
     //////////////////////
-    //  ONE-TIME SETUP  //
+    //  Game objects    //
     //////////////////////
 
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
-    var customBounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
+    var player_bounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    for(i=0;i<80;i++)
-    {
-        this.add.sprite(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
-    }
+    players = this.physics.add.group({
+        classType: Player,
+        maxSize: maxPlayers,
+        customBoundsRectangle: player_bounds,
+        collideWorldBounds: true,
+        runChildUpdate: true
+    });
+
+    bots = this.physics.add.group({
+        classType: Bot,
+        maxSize: maxBots,
+        runChildUpdate: true
+    });
+
+    bullets1 = this.physics.add.group({
+        classType: Bullet,
+        maxSize: maxBullets,
+        runChildUpdate: true
+    });
+
+    bullets2 = this.physics.add.group({
+        classType: Bullet,
+        maxSize: maxBullets,
+        runChildUpdate: true
+    });
+
+    this.physics.add.collider(players, bullets1, player_hit, null, this);
+    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
+    this.physics.add.collider(bots, bullets2, bot_hit, null, this);
+    this.physics.add.collider(bots, players, bot_player_collision, null, this);
+
+    ////////////////////////
+    //  User Interface    //
+    ////////////////////////
 
     name_input = this.add.text(center_x, center_y, 'Enter name here', { fixedWidth: 150, fixedHeight: 36 });
     name_input.setOrigin(0.5, 0.5);
-
     name_input.setInteractive().on('pointerdown', () => {
         this.rexUI.edit(name_input)
     });
 
     respawn_button = this.add.sprite(center_x, center_y, 'button', 0);
     respawn_button.setInteractive();
-
     respawn_button.on('pointerdown', function () {
         var player_name = 'Coolest Player';
         if (!(name_input.text === 'Enter name here')){
@@ -541,38 +551,7 @@ function create ()
         respawn_button.setVisible(false);
     });
 
-    bullets1 = this.physics.add.group({
-        classType: Bullet,
-        maxSize: maxBullets,
-        runChildUpdate: true
-    });
-
-    bullets2 = this.physics.add.group({
-        classType: Bullet,
-        maxSize: maxBullets,
-        runChildUpdate: true
-    });
-
-    bots = this.physics.add.group({
-        classType: Bot,
-        maxSize: maxBots,
-        runChildUpdate: true
-    });
-
-    players = this.physics.add.group({
-        classType: Player,
-        maxSize: maxPlayers,
-        customBoundsRectangle: customBounds,
-        collideWorldBounds: true,
-        runChildUpdate: true
-    });
-
     leaderboard = new Leaderboard(this, 5, bots, players);
-
-    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
-    this.physics.add.collider(bots, bullets2, bot_hit, null, this);
-    this.physics.add.collider(bots, players, bot_player_hit, null, this);
-    this.physics.add.collider(players, bullets1, player_hit, null, this);
 
     /////////////
     //  SPAWN  //
@@ -594,15 +573,12 @@ function update (time, delta)
     mouseX = pos.x;
     mouseY = pos.y;
 
+    // Each bot shoot nearest enemy
     bots.children.each(function(bot) {
         var closest = this.physics.closest(bot);
         bot.shoot_nearest(closest, time);
     }, this);
 
-    if(numBots<maxBots)
-    {
-        spawn_bots(maxBots-numBots);
-    }
-
+    spawn_bots(maxBots - numBots);
     leaderboard.update();
 }
