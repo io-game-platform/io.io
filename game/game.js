@@ -288,7 +288,9 @@ var Bot = new Phaser.Class({
 
         if (time > this.reloadingUntil && dist < BOT_RANGE)
         {
-            this.fire(closest.x, closest.y, time, 500);
+            var x_noise = Phaser.Math.Between(-10, 10);
+            var y_noise = Phaser.Math.Between(-10, 10);
+            this.fire(closest.x + x_noise, closest.y + y_noise, time, 500);
         }
     },
 
