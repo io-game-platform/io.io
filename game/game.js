@@ -11,8 +11,7 @@ var reloadTime = 500;
 var BLAST_SIZE = 4;
 
 //
-var players, bots;
-var bullets1, bullets2;
+var players, bots, bullets;
 var respawn_button, name_input;
 var leaderboard;
 
@@ -253,12 +252,13 @@ var Bot = new Phaser.Class({
         numBots -= 1;
     },
 
-    shoot_nearest: function (closest, time)
+    shoot_nearest: function (time)
     {
+        var closest = this.scene.physics.closest(this);
 
         if (time > this.reloadingUntil)
         {
-            var bullet = bullets1.get(owner=this._name, sprite='bullet1', lifespan=500)
+            var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=500)
             bullet.fire(closest.x, closest.y, this.x, this.y);
             this.reloadingUntil = time + reloadTime + 1000;
         }
@@ -300,15 +300,7 @@ var Player = new Phaser.Class({
 
     fire: function (x, y, time = 0)
     {
-        var bullet;
-
-        if (this.is_main)
-        {
-            bullet = bullets2.get(owner=this._name, sprite='bullet1', lifespan=1000)
-        }
-        else{
-            bullet = bullets1.get(owner=this._name, sprite='bullet1', lifespan=1000);
-        }
+        var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=1000);
 
         bullet.fire(mouseX, mouseY, this.x, this.y);
         this.reloadingUntil = time + reloadTime;
@@ -318,7 +310,7 @@ var Player = new Phaser.Class({
     {
         for(var i=0; i<BLAST_SIZE+1; i++)
         {
-            bullet = bullets2.get(owner=this._name, sprite='bullet2', lifespan=400)
+            bullet = bullets.get(owner=this._name, sprite='bullet2', lifespan=400)
             bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
         }
         this.reloadingUntil = time + reloadTime;
@@ -421,8 +413,11 @@ function spawn_bots (n)
 
 function player_hit(player, bullet)
 {
-    player.destroy_player();
-    bullet.destroy_bullet();
+    if(!player.owns(bullet))
+    {
+        player.destroy_player();
+        bullet.destroy_bullet();
+    }
 }
 
 function bot_hit(bot, bullet)
@@ -505,21 +500,15 @@ function create ()
         runChildUpdate: true
     });
 
-    bullets1 = this.physics.add.group({
+    bullets = this.physics.add.group({
         classType: Bullet,
         maxSize: maxBullets,
         runChildUpdate: true
     });
 
-    bullets2 = this.physics.add.group({
-        classType: Bullet,
-        maxSize: maxBullets,
-        runChildUpdate: true
-    });
 
-    this.physics.add.collider(players, bullets1, player_hit, null, this);
-    this.physics.add.collider(bots, bullets1, bot_hit, null, this);
-    this.physics.add.collider(bots, bullets2, bot_hit, null, this);
+    this.physics.add.collider(players, bullets, player_hit, null, this);
+    this.physics.add.collider(bots, bullets, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_collision, null, this);
 
     ////////////////////////
@@ -575,9 +564,9 @@ function update (time, delta)
 
     // Each bot shoot nearest enemy
     bots.children.each(function(bot) {
-        var closest = this.physics.closest(bot);
-        bot.shoot_nearest(closest, time);
+        bot.shoot_nearest(time);
     }, this);
+
 
     spawn_bots(maxBots - numBots);
     leaderboard.update();
