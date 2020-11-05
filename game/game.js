@@ -9,6 +9,7 @@ var maxBullets = 200;
 
 var reloadTime = 500;
 var BLAST_SIZE = 4;
+var BOT_RANGE = 300;
 
 //
 var players, bots, bullets;
@@ -42,12 +43,13 @@ var Bullet = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Image,
 
-    initialize: function Bullet (scene, owner, sprite, lifespan)
+    initialize: function Bullet (scene, owner, owner_ref, sprite, lifespan)
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, sprite);
         this.incX = 0;
         this.incY = 0;
         this._owner = owner;
+        this.owner_ref = owner_ref;
         this.lifespan = lifespan;
         this.speed = Phaser.Math.GetSpeed(600, 1);
     },
@@ -116,7 +118,7 @@ var Bot = new Phaser.Class({
         Phaser.GameObjects.Image.call(this, scene, Phaser.Math.Between(-1000000,0), Phaser.Math.Between(-1000000,0), 'ship');
         this.setDepth(1);
         this._name = name;
-        this._score = -5;
+        this._score = 0;
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
@@ -160,7 +162,7 @@ var Bot = new Phaser.Class({
     fire: function (x, y, time = 0, lifespan = 1000)
     {
         /* Fire single bullet. */
-        var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=lifespan);
+        var bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet1', lifespan=lifespan);
 
         bullet.fire(x, y, this.x, this.y);
         this.reloadingUntil = time + reloadTime;
@@ -171,7 +173,7 @@ var Bot = new Phaser.Class({
         /* Fire blast of BLAST_SIZE bullets. */
         for(var i=0; i<BLAST_SIZE+1; i++)
         {
-            bullet = bullets.get(owner=this._name, sprite='bullet2', lifespan=400)
+            bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet2', lifespan=400)
             bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
         }
         this.reloadingUntil = time + reloadTime;
@@ -238,7 +240,7 @@ var Bot = new Phaser.Class({
     {
         /* Init for circle eight movement pattern. */
         this.diameter = Phaser.Math.Between(100, 500);
-        this.step_value = 72;
+        this.step_value = 144;
         this.step = Math.PI / this.step_value;
 
         this.time = Phaser.Math.Between(0, 100);
@@ -282,9 +284,13 @@ var Bot = new Phaser.Class({
         /* Shoot nearest game object to bot. */
         var closest = this.scene.physics.closest(this);
 
-        if (time > this.reloadingUntil)
+        var dist = Math.pow(Math.pow(this.x - closest.x, 2) + Math.pow(this.y - closest.y, 2), .5)
+
+        if (time > this.reloadingUntil && dist < BOT_RANGE)
         {
-            this.fire(closest.x, closest.y, time, 500);
+            var x_noise = Phaser.Math.Between(-10, 10);
+            var y_noise = Phaser.Math.Between(-10, 10);
+            this.fire(closest.x + x_noise, closest.y + y_noise, time, 500);
         }
     },
 
@@ -333,7 +339,7 @@ var Player = new Phaser.Class({
             this.setRotation(angle - Math.PI / 2);
 
             this.speed = (Math.abs(Math.abs(mouseX)-Math.abs(this.x)) + Math.abs(Math.abs(mouseY)-Math.abs(this.y)));
-            this.speed = Phaser.Math.GetSpeed(Math.max(this.speed, this.speedMax), 1);
+            this.speed = Phaser.Math.GetSpeed(Math.min(this.speed, this.speedMax), 1);
 
             this.x -= Math.cos(angle) * (this.speed * delta);
             this.y -= Math.sin(angle) * (this.speed * delta);
@@ -354,6 +360,9 @@ var Player = new Phaser.Class({
 
     destroy_player: function ()
     {
+        // Reset score instead
+        // this._score = Math.floor(this._score / 2);
+
         this.destroy();
         this._hide_name();
 
@@ -422,6 +431,8 @@ function player_hit(player, bullet)
 {
     if(!player.owns(bullet))
     {
+        bullet.owner_ref._score += 5;
+
         player.destroy_player();
         bullet.destroy_bullet();
     }
@@ -431,6 +442,8 @@ function bot_hit(bot, bullet)
 {
     if(!bot.owns(bullet))
     {
+        bullet.owner_ref._score += 5;
+
         bot.destroy_bot();
         bullet.destroy_bullet();
     }
@@ -491,8 +504,13 @@ function create ()
     //////////////////////
 
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
-    var player_bounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
+    for(i=0;i<80;i++)
+    {
+        this.add.sprite(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
+    }
+
+    var player_bounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
     players = this.physics.add.group({
         classType: Player,
         maxSize: maxPlayers,
