@@ -43,12 +43,13 @@ var Bullet = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Image,
 
-    initialize: function Bullet (scene, owner, sprite, lifespan)
+    initialize: function Bullet (scene, owner, owner_ref, sprite, lifespan)
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, sprite);
         this.incX = 0;
         this.incY = 0;
         this._owner = owner;
+        this.owner_ref = owner_ref;
         this.lifespan = lifespan;
         this.speed = Phaser.Math.GetSpeed(600, 1);
     },
@@ -117,7 +118,7 @@ var Bot = new Phaser.Class({
         Phaser.GameObjects.Image.call(this, scene, Phaser.Math.Between(-1000000,0), Phaser.Math.Between(-1000000,0), 'ship');
         this.setDepth(1);
         this._name = name;
-        this._score = -5;
+        this._score = 0;
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
@@ -161,7 +162,7 @@ var Bot = new Phaser.Class({
     fire: function (x, y, time = 0, lifespan = 1000)
     {
         /* Fire single bullet. */
-        var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=lifespan);
+        var bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet1', lifespan=lifespan);
 
         bullet.fire(x, y, this.x, this.y);
         this.reloadingUntil = time + reloadTime;
@@ -172,7 +173,7 @@ var Bot = new Phaser.Class({
         /* Fire blast of BLAST_SIZE bullets. */
         for(var i=0; i<BLAST_SIZE+1; i++)
         {
-            bullet = bullets.get(owner=this._name, sprite='bullet2', lifespan=400)
+            bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet2', lifespan=400)
             bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
         }
         this.reloadingUntil = time + reloadTime;
@@ -357,6 +358,9 @@ var Player = new Phaser.Class({
 
     destroy_player: function ()
     {
+        // Reset score instead
+        // this._score = Math.floor(this._score / 2);
+
         this.destroy();
         this._hide_name();
 
@@ -425,6 +429,8 @@ function player_hit(player, bullet)
 {
     if(!player.owns(bullet))
     {
+        bullet.owner_ref._score += 5;
+
         player.destroy_player();
         bullet.destroy_bullet();
     }
@@ -434,6 +440,8 @@ function bot_hit(bot, bullet)
 {
     if(!bot.owns(bullet))
     {
+        bullet.owner_ref._score += 5;
+
         bot.destroy_bot();
         bullet.destroy_bullet();
     }
