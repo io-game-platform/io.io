@@ -9,6 +9,7 @@ var maxBullets = 200;
 
 var reloadTime = 500;
 var BLAST_SIZE = 4;
+var BOT_RANGE = 300;
 
 //
 var players, bots, bullets;
@@ -282,7 +283,9 @@ var Bot = new Phaser.Class({
         /* Shoot nearest game object to bot. */
         var closest = this.scene.physics.closest(this);
 
-        if (time > this.reloadingUntil)
+        var dist = Math.pow(Math.pow(this.x - closest.x, 2) + Math.pow(this.y - closest.y, 2), .5)
+
+        if (time > this.reloadingUntil && dist < BOT_RANGE)
         {
             this.fire(closest.x, closest.y, time, 500);
         }
