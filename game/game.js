@@ -339,7 +339,7 @@ var Player = new Phaser.Class({
             this.setRotation(angle - Math.PI / 2);
 
             this.speed = (Math.abs(Math.abs(mouseX)-Math.abs(this.x)) + Math.abs(Math.abs(mouseY)-Math.abs(this.y)));
-            this.speed = Phaser.Math.GetSpeed(Math.max(this.speed, this.speedMax), 1);
+            this.speed = Phaser.Math.GetSpeed(Math.min(this.speed, this.speedMax), 1);
 
             this.x -= Math.cos(angle) * (this.speed * delta);
             this.y -= Math.sin(angle) * (this.speed * delta);
