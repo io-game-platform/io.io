@@ -159,6 +159,7 @@ var Bot = new Phaser.Class({
 
     fire: function (x, y, time = 0, lifespan = 1000)
     {
+        /* Fire single bullet. */
         var bullet = bullets.get(owner=this._name, sprite='bullet1', lifespan=lifespan);
 
         bullet.fire(x, y, this.x, this.y);
@@ -167,6 +168,7 @@ var Bot = new Phaser.Class({
 
     blast: function (x, y, time = 0)
     {
+        /* Fire blast of BLAST_SIZE bullets. */
         for(var i=0; i<BLAST_SIZE+1; i++)
         {
             bullet = bullets.get(owner=this._name, sprite='bullet2', lifespan=400)
@@ -177,6 +179,7 @@ var Bot = new Phaser.Class({
 
     _show_name: function (scene)
     {
+        /* Display bot name underneath it. */
         this.name = scene.add.text(this.x, this.y, this._name);
         this.name.setFontFamily('Times New Roman')
         this.name.setFontSize(24);
@@ -198,6 +201,7 @@ var Bot = new Phaser.Class({
 
     _init_square: function ()
     {
+        /* Init for square movement pattern. */
         this.side_len = Phaser.Math.Between(100, 200);
         this.time = Phaser.Math.Between(0, 100);
 
@@ -211,6 +215,7 @@ var Bot = new Phaser.Class({
 
     _move_square: function (time)
     {
+        /* Update for square movement pattern. */
         var timed_side_len = this.side_len / this.speed;
         var i = time % (timed_side_len * 4);
 
@@ -231,6 +236,7 @@ var Bot = new Phaser.Class({
 
     _init_eight: function ()
     {
+        /* Init for circle eight movement pattern. */
         this.diameter = Phaser.Math.Between(100, 500);
         this.step_value = 72;
         this.step = Math.PI / this.step_value;
@@ -248,6 +254,7 @@ var Bot = new Phaser.Class({
 
     _move_eight: function (time)
     {
+        /* Update for circle eight movement pattern. */
         if (time % (2 * this.step_value) - Math.floor(this.step_value / 2) == 0) {
             this.direction = !this.direction;
         }
@@ -272,6 +279,7 @@ var Bot = new Phaser.Class({
 
     shoot_nearest: function (time)
     {
+        /* Shoot nearest game object to bot. */
         var closest = this.scene.physics.closest(this);
 
         if (time > this.reloadingUntil)
@@ -282,6 +290,7 @@ var Bot = new Phaser.Class({
 
     owns: function (bullet)
     {
+        /* Does this ship own bullet? */
         return bullet.get_owner() == this._name;
     }
 });
