@@ -240,7 +240,7 @@ var Bot = new Phaser.Class({
     {
         /* Init for circle eight movement pattern. */
         this.diameter = Phaser.Math.Between(100, 500);
-        this.step_value = 72;
+        this.step_value = 144;
         this.step = Math.PI / this.step_value;
 
         this.time = Phaser.Math.Between(0, 100);
