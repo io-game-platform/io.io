@@ -299,6 +299,16 @@ var Bot = new Phaser.Class({
         this._size = this._score + 24;
         this.setSize(this._size, this._size);
         this.nameOffsetY = this._size/2; 
+    },
+
+    get_score: function ()
+    {
+        return this._score;
+    },
+
+    increase_score: function (inc)
+    {
+        this._score += inc;
     }
 });
 
@@ -451,8 +461,40 @@ function bot_hit(bot, bullet)
 
 function bot_player_collision(bot, player)
 {
-    bot.destroy_bot();
-    player.destroy_player();
+    if(bot.get_score() < player.get_score())
+    {
+        player.increase_score(bot.get_score()+1);
+        bot.destroy_bot();
+    }
+    else if(bot.get_score() > player.get_score())
+    {
+        bot.increase_score(player.get_score()+1);
+        player.destroy_player();
+    }
+    else
+    {
+        bot.destroy_bot();
+        player.destroy_player();
+    }
+}
+
+function bot_bot_collision(bot1, bot2)
+{
+    if(bot1.get_score() < bot2.get_score())
+    {
+        bot2.increase_score(bot1.get_score()+1);
+        bot1.destroy_bot();
+    }
+    else if(bot1.get_score() > bot2.get_score())
+    {
+        bot1.increase_score(bot2.get_score()+1);
+        bot2.destroy_bot();
+    }
+    else
+    {
+        bot1.destroy_bot();
+        bot2.destroy_bot();
+    }
 }
 
 function preload ()
@@ -529,6 +571,7 @@ function create ()
     this.physics.add.collider(players, bullets, player_hit, null, this);
     this.physics.add.collider(bots, bullets, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_collision, null, this);
+    this.physics.add.collider(bots, bots, bot_bot_collision, null, this);
 
     ////////////////////////
     //  User Interface    //
