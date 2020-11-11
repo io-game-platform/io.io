@@ -111,14 +111,17 @@ var Bullet = new Phaser.Class({
 
 var Bot = new Phaser.Class({
 
-    Extends: Phaser.GameObjects.Image,
+    Extends: Phaser.GameObjects.Ellipse,
 
     initialize: function Bot (scene, name = 'Bot')
     {
-        Phaser.GameObjects.Image.call(this, scene, Phaser.Math.Between(-1000000,0), Phaser.Math.Between(-1000000,0), 'ship');
+        var color = new Phaser.Display.Color();
+        color.random();
+        Phaser.GameObjects.Ellipse.call(this, scene, Phaser.Math.Between(-1000000,0), Phaser.Math.Between(-1000000,0), 24, 24, color.color);
         this.setDepth(1);
         this._name = name;
         this._score = 0;
+        this._size = 24;
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
@@ -145,6 +148,7 @@ var Bot = new Phaser.Class({
 
     update: function (time, delta)
     {
+        this.resize()
         this._update_name();
 
         if (this.type == 0) {
@@ -168,17 +172,6 @@ var Bot = new Phaser.Class({
         this.reloadingUntil = time + reloadTime;
     },
 
-    blast: function (x, y, time = 0)
-    {
-        /* Fire blast of BLAST_SIZE bullets. */
-        for(var i=0; i<BLAST_SIZE+1; i++)
-        {
-            bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet2', lifespan=400)
-            bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
-        }
-        this.reloadingUntil = time + reloadTime;
-    },
-
     _show_name: function (scene)
     {
         /* Display bot name underneath it. */
@@ -187,7 +180,8 @@ var Bot = new Phaser.Class({
         this.name.setFontSize(24);
         this.name.setActive(true);
         this.name.setVisible(true);
-        this.nameOffset = this.name.width/2;
+        this.nameOffsetX = this.name.width/2;
+        this.nameOffsetY = this.height/2;
     },
 
     _hide_name: function (scene)
@@ -198,7 +192,7 @@ var Bot = new Phaser.Class({
 
     _update_name: function ()
     {
-        this.name.setPosition(this.x-this.nameOffset, this.y+60)
+        this.name.setPosition(this.x-this.nameOffsetX, this.y+this.nameOffsetY)
     },
 
     _init_square: function ()
@@ -298,6 +292,13 @@ var Bot = new Phaser.Class({
     {
         /* Does this ship own bullet? */
         return bullet.get_owner() == this._name;
+    },
+
+    resize: function ()
+    {
+        this._size = this._score + 24;
+        this.setSize(this._size, this._size);
+        this.nameOffsetY = this._size/2; 
     }
 });
 
@@ -308,7 +309,9 @@ var Player = new Phaser.Class({
 
     initialize: function Player (scene, is_main=false, name='player')
     {
-        Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
+        var color = new Phaser.Display.Color();
+        color.random();
+        Phaser.GameObjects.Ellipse.call(this, scene, 0, 0, 32, 32, color.color);
         this.setDepth(2);
         this.is_main = is_main;
         this._name = name;
@@ -331,6 +334,7 @@ var Player = new Phaser.Class({
 
     update: function (time, delta)
     {
+        this.resize()
         this._update_name();
 
         if (this.is_main)
@@ -349,10 +353,6 @@ var Player = new Phaser.Class({
                 if (leftDown)
                 {
                     this.fire(mouseX, mouseY, time);
-                }
-                if (rightDown)
-                {
-                    this.blast(mouseX, mouseY, time)
                 }
             }
         }
@@ -460,9 +460,6 @@ function preload ()
     /*
     Preload is called by Phaser before anything else.
     */
-    this.input.setDefaultCursor('url(assets/input/cursors/sc2/SC2-target-none.cur), pointer');
-    
-    this.load.image('ship', 'assets/sprites/ship.png');
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
     this.load.image('bullet2', 'assets/sprites/bullets/bullet4.png');
     this.load.image('button', 'assets/sprites/bullets/bullet11.png');
@@ -485,9 +482,6 @@ function create ()
     //////////////////////
     //  Declarations    //
     //////////////////////
-
-    // Prevent right click context menu
-    game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
     // Set global variables for pointer control
     this.input.on('pointerdown', function (pointer) {
@@ -588,9 +582,9 @@ function update (time, delta)
     mouseY = pos.y;
 
     // Each bot shoot nearest enemy
-    bots.children.each(function(bot) {
-        bot.shoot_nearest(time);
-    }, this);
+    //bots.children.each(function(bot) {
+    //    bot.shoot_nearest(time);
+    //}, this);
 
 
     spawn_bots(maxBots - numBots);
