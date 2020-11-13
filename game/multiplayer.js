@@ -6,9 +6,9 @@ function sleep (time) {
 }
 
 
-var _get_help;
+var state_output;
 function _get_helper(state) {
-    _get_help = state;
+    state_output = state;
 }
 
 
@@ -28,8 +28,6 @@ function get_state() {
     var promise = fetch(URL, {method: "GET"});
 
     promise.then(res => res.json()).then(_get_helper);
-
-    return _get_help;
 }
 
 
@@ -37,7 +35,5 @@ function get_state() {
 var s = {};
 //send_state(s);
 
-var s_new = get_state();
-
-//console.log(s_new);
-sleep(100).then(() => console.log(_get_help));
+get_state();
+sleep(200).then(() => console.log(state_output));
