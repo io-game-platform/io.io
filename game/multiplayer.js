@@ -1,24 +1,43 @@
-
-var ip = "127.0.0.1";
 const URL = 'https://jsonplaceholder.typicode.com/todos/1'
 
-function send_state(state) {
 
+function sleep (time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
 }
+
+
+var _get_help;
+function _get_helper(state) {
+    _get_help = state;
+}
+
+
+function send_state(state) {
+    fetch(URL, {
+       method: "POST",
+       body: JSON.stringify(state),
+       headers: {
+          "Content-type": "application/json; charset=UTF-8"
+       }
+    });
+}
+
 
 function get_state() {
     // Belongs in update
-    var state = fetch(URL, {method: "GET"});
+    var promise = fetch(URL, {method: "GET"});
 
-    //state.then(res => res.json()).then(d => {console.log(d)});
+    promise.then(res => res.json()).then(_get_helper);
 
-    return state;
+    return _get_help;
 }
+
+
 
 var s = {};
 //send_state(s);
 
 var s_new = get_state();
 
-//console.log(s);
-console.log(s_new);
+//console.log(s_new);
+sleep(100).then(() => console.log(_get_help));
