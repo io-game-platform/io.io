@@ -6,6 +6,7 @@ var center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGHT / 2;
 var maxPlayers = 3;
 var maxBots = 12;
 var maxBullets = 200;
+var maxPoints = 150;
 
 var reloadTime = 500;
 var BLAST_SIZE = 4;
@@ -17,7 +18,7 @@ var respawn_button, name_input;
 var leaderboard;
 
 var player_main;
-var numBots = 0, reloadingUntil = 0;
+var numBots = 0, reloadingUntil = 0, numPoints = 0;
 var leftDown = false, rightDown = false;
 var mouseX = 0, mouseY = 0;
 
@@ -121,7 +122,7 @@ var Bot = new Phaser.Class({
         this.setDepth(1);
         this._name = name;
         this._score = 0;
-        this._size = 24;
+        this._scale = 1;
 
         this.type = Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
@@ -296,9 +297,9 @@ var Bot = new Phaser.Class({
 
     resize: function ()
     {
-        this._size = this._score + 24;
-        this.setSize(this._size, this._size);
-        this.nameOffsetY = this._size/2; 
+        this._scale = (this._score+24)/24;
+        this.setScale(this._scale);
+        this.nameOffsetY = this.height*this._scale/2; 
     },
 
     get_score: function ()
@@ -437,6 +438,14 @@ function spawn_bots (n)
     }
 }
 
+function spawn_points (n)
+{
+    numPoints += n;
+    for (var i = 0; i < n; i++) {
+        points.create(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
+    }
+}
+
 function player_hit(player, bullet)
 {
     if(!player.owns(bullet))
@@ -497,6 +506,18 @@ function bot_bot_collision(bot1, bot2)
     }
 }
 
+function point_bot_collision(point, bot)
+{
+    bot.increase_score(1);
+    point.destroy();
+}
+
+function point_player_collision(point, player)
+{
+    player.increase_score(1);
+    point.destroy();
+}
+
 function preload ()
 {
     /*
@@ -541,12 +562,10 @@ function create ()
 
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    for(i=0;i<80;i++)
-    {
-        this.add.sprite(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
-    }
-
     var player_bounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+    points = this.physics.add.group();
+
     players = this.physics.add.group({
         classType: Player,
         maxSize: maxPlayers,
@@ -572,6 +591,8 @@ function create ()
     this.physics.add.collider(bots, bullets, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_collision, null, this);
     this.physics.add.collider(bots, bots, bot_bot_collision, null, this);
+    this.physics.add.collider(points, players, point_player_collision, null, this);
+    this.physics.add.collider(points, bots, point_bot_collision, null, this);
 
     ////////////////////////
     //  User Interface    //
@@ -620,16 +641,12 @@ function update (time, delta)
     Update is called by Phaser at every timestep.
     */
     this.cameras.main.startFollow(player_main);
+
     var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
     mouseX = pos.x;
     mouseY = pos.y;
 
-    // Each bot shoot nearest enemy
-    //bots.children.each(function(bot) {
-    //    bot.shoot_nearest(time);
-    //}, this);
-
-
     spawn_bots(maxBots - numBots);
+    spawn_points(maxPoints - numPoints);
     leaderboard.update();
 }
