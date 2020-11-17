@@ -497,6 +497,18 @@ function bot_bot_collision(bot1, bot2)
     }
 }
 
+function point_bot_collision(point, bot)
+{
+    bot.increase_score(1);
+    point.destroy();
+}
+
+function point_player_collision(point, player)
+{
+    player.increase_score(1);
+    point.destroy();
+}
+
 function preload ()
 {
     /*
@@ -541,9 +553,11 @@ function create ()
 
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    for(i=0;i<80;i++)
+    points = this.physics.add.group();
+
+     for(i=0;i<80;i++)
     {
-        this.add.sprite(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
+        points.create(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
     }
 
     var player_bounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
@@ -572,6 +586,8 @@ function create ()
     this.physics.add.collider(bots, bullets, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_collision, null, this);
     this.physics.add.collider(bots, bots, bot_bot_collision, null, this);
+    this.physics.add.collider(points, players, point_player_collision, null, this);
+    this.physics.add.collider(points, bots, point_bot_collision, null, this);
 
     ////////////////////////
     //  User Interface    //
