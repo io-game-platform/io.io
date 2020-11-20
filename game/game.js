@@ -121,7 +121,7 @@ var Bot = new Phaser.Class({
         Phaser.GameObjects.Ellipse.call(this, scene, Phaser.Math.Between(-1000000,0), Phaser.Math.Between(-1000000,0), 24, 24, color.color);
         this.setDepth(1);
         this._name = name;
-        this._score = 0;
+        this._score = Phaser.Math.Between(5, 20);
         this._scale = 1;
 
         this.type = Phaser.Math.Between(0, 1);
