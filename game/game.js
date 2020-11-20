@@ -124,7 +124,7 @@ var Bot = new Phaser.Class({
         this._score = Phaser.Math.Between(5, 20);
         this._scale = 1;
 
-        this.type = Phaser.Math.Between(0, 1);
+        this.type = 0;//Phaser.Math.Between(0, 1);
         this.speed = Phaser.Math.GetSpeed(400, 1);
         this.start_x = 0;
         this.start_y = 0;
@@ -140,10 +140,9 @@ var Bot = new Phaser.Class({
         this.setVisible(true);
         this.start_x = start_x;
         this.start_y = start_y;
-        if (this.type == 0) {  // Square
-            this._init_square();
-        } else if (this.type == 1) {  // Circle 8
-            this._init_eight();
+
+        if (this.type == 0) {
+            this._init_chase();
         }
     },
 
@@ -153,9 +152,7 @@ var Bot = new Phaser.Class({
         this._update_name();
 
         if (this.type == 0) {
-            this._move_square(this.time);
-        } else if (this.type == 1) {
-            this._move_eight(this.time);
+            this._move_chase(this.time);
         }
 
         this.x = Math.max(0, Math.min(MAP_HEIGHT, this.x));
@@ -196,75 +193,43 @@ var Bot = new Phaser.Class({
         this.name.setPosition(this.x-this.nameOffsetX, this.y+this.nameOffsetY)
     },
 
-    _init_square: function ()
+    _init_chase: function ()
     {
-        /* Init for square movement pattern. */
-        this.side_len = Phaser.Math.Between(100, 200);
         this.time = Phaser.Math.Between(0, 100);
 
         this.setPosition(this.start_x, this.start_y);
-
-        var i;
-        for (i = 0; i < this.time; i++){
-            this._move_square(i);
-        }
     },
 
-    _move_square: function (time)
+    _move_chase: function (time)
     {
-        /* Update for square movement pattern. */
-        var timed_side_len = this.side_len / this.speed;
-        var i = time % (timed_side_len * 4);
+        var nearest_bot = 0;
+        var min_distance = 10000000000;
+        for (var i = 0; i < numBots; i++){
+            opponent = bots.getChildren()[i];
 
-        if (i < timed_side_len) {
-            this.y += this.speed;
-            this.setRotation(Math.PI);
-        } else if (i < timed_side_len * 2) {
-            this.x += this.speed;
-            this.setRotation(Math.PI / 2);
-        } else if (i < timed_side_len * 3) {
-            this.y -= this.speed;
-            this.setRotation(0);
-        } else {
-            this.x -= this.speed;
-            this.setRotation(Math.PI * 3 / 2);
-        }
-    },
+            if(opponent != null && opponent._score < this._score){
 
-    _init_eight: function ()
-    {
-        /* Init for circle eight movement pattern. */
-        this.diameter = Phaser.Math.Between(100, 500);
-        this.step_value = 144;
-        this.step = Math.PI / this.step_value;
+                var distance = Math.pow(Math.pow(this.x - opponent.x, 2) + Math.pow(this.y - opponent.y, 2), .5);
 
-        this.time = Phaser.Math.Between(0, 100);
-
-        this.setPosition(this.start_x, this.start_y);
-
-        this.direction = false;
-        var i;
-        for (i = 0; i < this.time; i++){
-            this._move_eight(i);
-        }
-    },
-
-    _move_eight: function (time)
-    {
-        /* Update for circle eight movement pattern. */
-        if (time % (2 * this.step_value) - Math.floor(this.step_value / 2) == 0) {
-            this.direction = !this.direction;
+                if (distance < min_distance){
+                    min_distance = distance;
+                    nearest_bot = opponent;
+                }
+            }
         }
 
-        if (this.direction) {
-            this.x += (Math.sin((time + 1) * this.step) - Math.sin(time * this.step)) * this.diameter;
-            this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter;
-            this.setRotation(Math.cos(time * this.step) + Math.PI / 2);
-        } else {
-            this.x += -(Math.sin((time + 1) * this.step) - Math.sin(time * this.step)) * this.diameter;
-            this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter;
-            this.setRotation(-Math.cos(time * this.step) - Math.PI / 2);
+        if (nearest_bot == 0 || nearest_bot == null){
+            return
         }
+
+        var dx = nearest_bot.x - this.x;
+        var dy = nearest_bot.y - this.y;
+
+        var angle = Math.atan(dy / dx);
+
+        this.x += this.speed * Math.cos(angle);
+        this.y += this.speed * Math.sin(angle);
+
     },
 
     destroy_bot: function ()
