@@ -13,7 +13,7 @@ var BOT_RANGE = 300;
 
 //
 var players, bots, bullets;
-var respawn_button, name_input;
+var respawn_button, name_input, game_name, ui_rect;
 var leaderboard;
 
 var player_main;
@@ -122,11 +122,11 @@ var Bot = new Phaser.Class({
         this.setDepth(1);
         this._growthRate = .9;
         this._name = name;
-        this._score = 0;
+        this._score = Phaser.Math.Between(5, 20);
         this._scale = 1;
 
-        this.type = Phaser.Math.Between(0, 1);
-        this.speed = Phaser.Math.GetSpeed(400, 1);
+        this.type = 0;//Phaser.Math.Between(0, 1);
+        this.speed = 2//Phaser.Math.GetSpeed(400, 1);
         this.start_x = 0;
         this.start_y = 0;
 
@@ -141,10 +141,9 @@ var Bot = new Phaser.Class({
         this.setVisible(true);
         this.start_x = start_x;
         this.start_y = start_y;
-        if (this.type == 0) {  // Square
-            this._init_square();
-        } else if (this.type == 1) {  // Circle 8
-            this._init_eight();
+
+        if (this.type == 0) {
+            this._init_chase();
         }
     },
 
@@ -154,9 +153,7 @@ var Bot = new Phaser.Class({
         this._update_name();
 
         if (this.type == 0) {
-            this._move_square(this.time);
-        } else if (this.type == 1) {
-            this._move_eight(this.time);
+            this._move_chase(this.time);
         }
 
         this.x = Math.max(0, Math.min(MAP_HEIGHT, this.x));
@@ -172,6 +169,11 @@ var Bot = new Phaser.Class({
 
         bullet.fire(x, y, this.x, this.y);
         this.reloadingUntil = time + reloadTime;
+    },
+
+    _list_ships () {
+        // make a combined list of all bots and players
+        return bots.getChildren().concat(players.getChildren());
     },
 
     _show_name: function (scene)
@@ -198,75 +200,46 @@ var Bot = new Phaser.Class({
         this.name.setScale(textScale);
     },
 
-    _init_square: function ()
+    _init_chase: function ()
     {
-        /* Init for square movement pattern. */
-        this.side_len = Phaser.Math.Between(100, 200);
         this.time = Phaser.Math.Between(0, 100);
 
         this.setPosition(this.start_x, this.start_y);
-
-        var i;
-        for (i = 0; i < this.time; i++){
-            this._move_square(i);
-        }
     },
 
-    _move_square: function (time)
+    _move_chase: function (time)
     {
-        /* Update for square movement pattern. */
-        var timed_side_len = this.side_len / this.speed;
-        var i = time % (timed_side_len * 4);
+        var nearest_bot = 0;
+        var min_distance = 10000000000;
 
-        if (i < timed_side_len) {
-            this.y += this.speed;
-            this.setRotation(Math.PI);
-        } else if (i < timed_side_len * 2) {
-            this.x += this.speed;
-            this.setRotation(Math.PI / 2);
-        } else if (i < timed_side_len * 3) {
-            this.y -= this.speed;
-            this.setRotation(0);
-        } else {
-            this.x -= this.speed;
-            this.setRotation(Math.PI * 3 / 2);
-        }
-    },
+        var ships = this._list_ships();
 
-    _init_eight: function ()
-    {
-        /* Init for circle eight movement pattern. */
-        this.diameter = Phaser.Math.Between(100, 500);
-        this.step_value = 144;
-        this.step = Math.PI / this.step_value;
+        for (var i = 0; i < ships.length; i++){
+            opponent = ships[i];
 
-        this.time = Phaser.Math.Between(0, 100);
+            if(opponent != null && opponent._score < this._score){
 
-        this.setPosition(this.start_x, this.start_y);
+                var distance = Math.pow(Math.pow(this.x - opponent.x, 2) + Math.pow(this.y - opponent.y, 2), .5);
 
-        this.direction = false;
-        var i;
-        for (i = 0; i < this.time; i++){
-            this._move_eight(i);
-        }
-    },
-
-    _move_eight: function (time)
-    {
-        /* Update for circle eight movement pattern. */
-        if (time % (2 * this.step_value) - Math.floor(this.step_value / 2) == 0) {
-            this.direction = !this.direction;
+                if (distance < min_distance){
+                    min_distance = distance;
+                    nearest_bot = opponent;
+                }
+            }
         }
 
-        if (this.direction) {
-            this.x += (Math.sin((time + 1) * this.step) - Math.sin(time * this.step)) * this.diameter;
-            this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter;
-            this.setRotation(Math.cos(time * this.step) + Math.PI / 2);
-        } else {
-            this.x += -(Math.sin((time + 1) * this.step) - Math.sin(time * this.step)) * this.diameter;
-            this.y += (Math.cos((time + 1) * this.step) - Math.cos(time * this.step)) * this.diameter;
-            this.setRotation(-Math.cos(time * this.step) - Math.PI / 2);
+        if (nearest_bot == 0 || nearest_bot == null){
+            return
         }
+
+        var dx = nearest_bot.x - this.x;
+        var dy = nearest_bot.y - this.y;
+
+        var angle = Math.atan(dy / dx);
+
+        this.x += this.speed * Math.cos(angle);
+        this.y += this.speed * Math.sin(angle);
+
     },
 
     destroy_bot: function ()
@@ -398,6 +371,10 @@ var Player = new Phaser.Class({
         player_main.x = center_x;
         player_main.y = center_y;
 
+        ui_rect.setActive(true);
+        ui_rect.setVisible(true);
+        game_name.setActive(true);
+        game_name.setVisible(true);
         name_input.setActive(true);
         name_input.setVisible(true);
         respawn_button.setActive(true);
@@ -629,6 +606,13 @@ function create ()
     //  User Interface    //
     ////////////////////////
 
+    var rect_w = 165, rect_h = 100;
+    ui_rect = this.add.rectangle(center_x-4, center_y, rect_w, rect_h, 0x555555);
+    ui_rect.setOrigin(0.5, 0.5);
+
+    game_name = this.add.text(center_x, center_y-40, 'plankton.io', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' });
+    game_name.setOrigin(0.5, 0.5);
+
     name_input = this.add.text(center_x, center_y, 'Enter name here', { fixedWidth: 150, fixedHeight: 36 });
     name_input.setOrigin(0.5, 0.5);
     name_input.setInteractive().on('pointerdown', () => {
@@ -648,6 +632,10 @@ function create ()
 
         respawn_button.setDepth(3);
 
+        ui_rect.setActive(false);
+        ui_rect.setVisible(false);
+        game_name.setActive(false);
+        game_name.setVisible(false);
         name_input.setActive(false);
         name_input.setVisible(false);
         respawn_button.setActive(false);
