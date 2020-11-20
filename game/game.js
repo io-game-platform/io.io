@@ -369,6 +369,10 @@ var Player = new Phaser.Class({
         player_main.x = center_x;
         player_main.y = center_y;
 
+        ui_rect.setActive(true);
+        ui_rect.setVisible(true);
+        game_name.setActive(true);
+        game_name.setVisible(true);
         name_input.setActive(true);
         name_input.setVisible(true);
         respawn_button.setActive(true);
@@ -540,6 +544,13 @@ function create ()
     //  User Interface    //
     ////////////////////////
 
+    var rect_w = 165, rect_h = 100;
+    ui_rect = this.add.rectangle(center_x-4, center_y, rect_w, rect_h, 0x555555);
+    ui_rect.setOrigin(0.5, 0.5);
+
+    game_name = this.add.text(center_x, center_y-40, 'plankton.io', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' });
+    game_name.setOrigin(0.5, 0.5);
+
     name_input = this.add.text(center_x, center_y, 'Enter name here', { fixedWidth: 150, fixedHeight: 36 });
     name_input.setOrigin(0.5, 0.5);
     name_input.setInteractive().on('pointerdown', () => {
@@ -559,6 +570,10 @@ function create ()
 
         respawn_button.setDepth(3);
 
+        ui_rect.setActive(false);
+        ui_rect.setVisible(false);
+        game_name.setActive(false);
+        game_name.setVisible(false);
         name_input.setActive(false);
         name_input.setVisible(false);
         respawn_button.setActive(false);
