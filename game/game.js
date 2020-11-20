@@ -548,7 +548,7 @@ function create ()
     ui_rect = this.add.rectangle(center_x-4, center_y, rect_w, rect_h, 0x555555);
     ui_rect.setOrigin(0.5, 0.5);
 
-    game_name = this.add.text(center_x, center_y-40, 'template', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' });
+    game_name = this.add.text(center_x, center_y-40, 'clone.io', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' });
     game_name.setOrigin(0.5, 0.5);
 
     name_input = this.add.text(center_x, center_y, 'Enter name here', { fixedWidth: 150, fixedHeight: 36 });
