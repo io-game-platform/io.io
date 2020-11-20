@@ -125,7 +125,7 @@ var Bot = new Phaser.Class({
         this._scale = 1;
 
         this.type = 0;//Phaser.Math.Between(0, 1);
-        this.speed = Phaser.Math.GetSpeed(400, 1);
+        this.speed = 2//Phaser.Math.GetSpeed(400, 1);
         this.start_x = 0;
         this.start_y = 0;
 
@@ -170,6 +170,11 @@ var Bot = new Phaser.Class({
         this.reloadingUntil = time + reloadTime;
     },
 
+    _list_ships () {
+        // make a combined list of all bots and players
+        return bots.getChildren().concat(players.getChildren());
+    },
+
     _show_name: function (scene)
     {
         /* Display bot name underneath it. */
@@ -204,8 +209,11 @@ var Bot = new Phaser.Class({
     {
         var nearest_bot = 0;
         var min_distance = 10000000000;
-        for (var i = 0; i < numBots; i++){
-            opponent = bots.getChildren()[i];
+
+        var ships = this._list_ships();
+
+        for (var i = 0; i < ships.length; i++){
+            opponent = ships[i];
 
             if(opponent != null && opponent._score < this._score){
 
