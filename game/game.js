@@ -2,7 +2,6 @@
 var SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
 var MAP_WIDTH = 4000, MAP_HEIGHT = 3000;
 var center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGHT / 2;
-
 var maxPlayers = 3;
 var maxBots = 12;
 var maxBullets = 200;
@@ -18,8 +17,9 @@ var respawn_button, name_input;
 var leaderboard;
 
 var player_main;
+var worldScale = 0, textScale = 1, zoomLevel = 1;
 var numBots = 0, reloadingUntil = 0, numPoints = 0;
-var leftDown = false, rightDown = false;
+var leftDown = false, rightDown = false, scaleChange = false;
 var mouseX = 0, mouseY = 0;
 
 var config = {
@@ -118,8 +118,9 @@ var Bot = new Phaser.Class({
     {
         var color = new Phaser.Display.Color();
         color.random();
-        Phaser.GameObjects.Ellipse.call(this, scene, Phaser.Math.Between(-1000000,0), Phaser.Math.Between(-1000000,0), 24, 24, color.color);
+        Phaser.GameObjects.Ellipse.call(this, scene, Phaser.Math.Between(-1000000,0), Phaser.Math.Between(-1000000,0), 25, 25, color.color);
         this.setDepth(1);
+        this._growthRate = .9;
         this._name = name;
         this._score = 0;
         this._scale = 1;
@@ -194,6 +195,7 @@ var Bot = new Phaser.Class({
     _update_name: function ()
     {
         this.name.setPosition(this.x-this.nameOffsetX, this.y+this.nameOffsetY)
+        this.name.setScale(textScale);
     },
 
     _init_square: function ()
@@ -297,9 +299,10 @@ var Bot = new Phaser.Class({
 
     resize: function ()
     {
-        this._scale = (this._score+24)/24;
+        this._scale = (this._score+50)/50;
         this.setScale(this._scale);
         this.nameOffsetY = this.height*this._scale/2; 
+        this.nameOffsetX = (this.name.width/2)+(worldScale*10);
     },
 
     get_score: function ()
@@ -322,9 +325,10 @@ var Player = new Phaser.Class({
     {
         var color = new Phaser.Display.Color();
         color.random();
-        Phaser.GameObjects.Ellipse.call(this, scene, 0, 0, 32, 32, color.color);
+        Phaser.GameObjects.Ellipse.call(this, scene, 0, 0, 25, 25, color.color);
         this.setDepth(2);
         this.is_main = is_main;
+        this._growthRate = .8;
         this._name = name;
         this._score = 0;
 
@@ -351,7 +355,6 @@ var Player = new Phaser.Class({
         if (this.is_main)
         {
             var angle = Phaser.Math.Angle.Between(mouseX, mouseY, this.x, this.y);
-            this.setRotation(angle - Math.PI / 2);
 
             this.speed = (Math.abs(Math.abs(mouseX)-Math.abs(this.x)) + Math.abs(Math.abs(mouseY)-Math.abs(this.y)));
             this.speed = Phaser.Math.GetSpeed(Math.min(this.speed, this.speedMax), 1);
@@ -365,6 +368,21 @@ var Player = new Phaser.Class({
                 {
                     this.fire(mouseX, mouseY, time);
                 }
+            }
+        }
+    },
+
+    resize: function ()
+    {
+        this._scale = (this._score+50)/50;
+        this.setScale(this._scale);
+        this.nameOffsetY = this.height*this._scale/2; 
+        this.nameOffsetX = (this.name.width/2)+(worldScale*15);
+
+        if(this.is_main){
+            if(this._scale > (worldScale + 1) * 4 && worldScale < 8){
+                worldScale += 1;
+                scaleChange = true;
             }
         }
     },
@@ -399,10 +417,12 @@ class Leaderboard {
         this.entry = [];
         for (var i = 0; i < n_entries; i++) {
             var e = [];
-            e[0] = scene.add.text(SCREEN_WIDTH - 200, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
-            e[1] = scene.add.text(SCREEN_WIDTH - 50, 10 + (20 * i), i, { fixedWidth: 150, fixedHeight: 36 });
+            e[0] = scene.add.text(410+textScale*(SCREEN_WIDTH-200)-(.5*SCREEN_WIDTH*textScale) , 310-(.5*SCREEN_HEIGHT*textScale)+((5*worldScale+20) * i), i, { fixedWidth: 150, fixedHeight: 36 });
+            e[1] = scene.add.text(410+textScale*(SCREEN_WIDTH-200)+(150*textScale)-(.5*SCREEN_WIDTH*textScale), 310-(.5*SCREEN_HEIGHT*textScale)+((5*worldScale+20) * i), i, { fixedWidth: 150, fixedHeight: 36 });
 
+            e[0].setFontSize(16);
             e[0].setScrollFactor(0, 0);
+            e[1].setFontSize(16);
             e[1].setScrollFactor(0, 0);
 
             this.entry[i] = e;
@@ -414,12 +434,21 @@ class Leaderboard {
         return this.bots.getChildren().concat(this.players.getChildren());
     }
 
+    setVisible (value) {
+        for (var i = 0; i < this.n_entries; i++) {
+            this.entry[i][0].setVisible(value);
+            this.entry[i][1].setVisible(value);
+        }
+    }
+
     update () {
         var ships = this._list_ships();
         ships.sort(function(a, b){return b._score - a._score});
 
         for (var i = 0; i < this.n_entries; i++) {
+            this.entry[i][0].setScale(textScale)
             this.entry[i][0].text = ships[i]._name;
+            this.entry[i][1].setScale(textScale)
             this.entry[i][1].text = ships[i]._score;
         }
     }
@@ -461,7 +490,7 @@ function bot_hit(bot, bullet)
 {
     if(!bot.owns(bullet))
     {
-        bullet.owner_ref._score += 5;
+        bullet.owner_ref._score += 50;
 
         bot.destroy_bot();
         bullet.destroy_bullet();
@@ -510,12 +539,14 @@ function point_bot_collision(point, bot)
 {
     bot.increase_score(1);
     point.destroy();
+    numPoints -= 1;
 }
 
 function point_player_collision(point, player)
 {
     player.increase_score(1);
     point.destroy();
+    numPoints -= 1;
 }
 
 function preload ()
@@ -640,6 +671,16 @@ function update (time, delta)
     /*
     Update is called by Phaser at every timestep.
     */
+    
+    if(scaleChange){
+        scaleChange = false;
+        leaderboard.setVisible(false);
+        zoomLevel = 1/(1.2**worldScale);
+        this.cameras.main.zoomTo(zoomLevel);
+        textScale = 1/zoomLevel;
+        leaderboard = new Leaderboard(this, 5, bots, players);
+    }
+
     this.cameras.main.startFollow(player_main);
 
     var pos = this.cameras.main.getWorldPoint(this.input.mousePointer.x, this.input.mousePointer.y);
