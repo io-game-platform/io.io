@@ -444,11 +444,14 @@ function spawn_bots (n)
     }
 }
 
-function spawn_points (n)
+function spawn_points (scene, n)
 {
     numPoints += n;
+    var color = new Phaser.Display.Color();
     for (var i = 0; i < n; i++) {
-        points.create(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
+        color.random();
+        var point = new Phaser.GameObjects.Ellipse(scene, Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 15, 15, color.color);
+        points.add(point, true);
     }
 }
 
@@ -534,7 +537,6 @@ function preload ()
     this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
     this.load.image('bullet2', 'assets/sprites/bullets/bullet4.png');
     this.load.image('button', 'assets/sprites/bullets/bullet11.png');
-    this.load.image('star', 'assets/sprites/yellow_ball.png');
 
     this.load.scenePlugin({
         key: 'rexuiplugin',
@@ -676,6 +678,6 @@ function update (time, delta)
     mouseY = pos.y;
 
     spawn_bots(maxBots - numBots);
-    spawn_points(maxPoints - numPoints);
+    spawn_points(this, maxPoints - numPoints);
     leaderboard.update();
 }
