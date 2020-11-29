@@ -274,9 +274,11 @@ var Bot = new Phaser.Class({
 
     destroy_bot: function ()
     {
-        this.destroy();
-        this._hide_name();
-        numBots -= 1;
+        if(this.active){
+            this.destroy();
+            this._hide_name();
+            numBots -= 1;
+        }
     },
 
     shoot_nearest: function (time)
@@ -426,8 +428,8 @@ function spawn_bots (n)
     */
     numBots += n;
     for (var i = 0; i < n; i++) {
-        var bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
-        bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
+        var curr_bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
+        curr_bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
     }
 }
 
@@ -517,7 +519,7 @@ function create ()
     var player_bounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
     players = this.physics.add.group({
         classType: Player,
-        maxSize: maxPlayers,
+        maxSize: maxPlayers + 100,
         customBoundsRectangle: player_bounds,
         collideWorldBounds: true,
         runChildUpdate: true
@@ -525,13 +527,13 @@ function create ()
 
     bots = this.physics.add.group({
         classType: Bot,
-        maxSize: maxBots,
+        maxSize: maxBots + 100,
         runChildUpdate: true
     });
 
     bullets = this.physics.add.group({
         classType: Bullet,
-        maxSize: maxBullets,
+        maxSize: maxBullets + 100,
         runChildUpdate: true
     });
 
@@ -607,7 +609,7 @@ function update (time, delta)
         bot.shoot_nearest(time);
     }, this);
 
-
+    numBots = Math.max(0, numBots);
     spawn_bots(maxBots - numBots);
     leaderboard.update();
 }
