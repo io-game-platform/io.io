@@ -18,7 +18,7 @@ var leaderboard;
 
 var player_main;
 var numBots = 0, reloadingUntil = 0;
-var leftDown = false, rightDown = false;
+var leftDown = false, middleDown = false;
 var mouseX = 0, mouseY = 0;
 
 var config = {
@@ -350,7 +350,7 @@ var Player = new Phaser.Class({
                 {
                     this.fire(mouseX, mouseY, time);
                 }
-                if (rightDown)
+                if (middleDown)
                 {
                     this.blast(mouseX, mouseY, time)
                 }
@@ -496,11 +496,11 @@ function create ()
     // Set global variables for pointer control
     this.input.on('pointerdown', function (pointer) {
         leftDown = pointer.leftButtonDown();
-        rightDown = pointer.rightButtonDown();
+        middleDown = pointer.middleButtonDown();
     });
     this.input.on('pointerup', function (pointer) {
         leftDown = pointer.leftButtonDown();
-        rightDown = pointer.rightButtonDown();
+        middleDown = pointer.middleButtonDown();
     });
 
     //////////////////////
