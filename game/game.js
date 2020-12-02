@@ -159,7 +159,7 @@ var Bot = new Phaser.Class({
         this.time += 1;
     },
 
-    fire: function (x, y, time = 0, lifespan = 1000)
+    fire: function (x, y, time, lifespan)
     {
         /* Fire single bullet. */
         var bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet1', lifespan=lifespan);
@@ -168,7 +168,7 @@ var Bot = new Phaser.Class({
         this.reloadingUntil = time + reloadTime;
     },
 
-    blast: function (x, y, time = 0)
+    blast: function (x, y, time)
     {
         /* Fire blast of BLAST_SIZE bullets. */
         for(var i=0; i<BLAST_SIZE+1; i++)
@@ -308,7 +308,7 @@ var Player = new Phaser.Class({
 
     Extends: Bot,
 
-    initialize: function Player (scene, is_main=false, name='player')
+    initialize: function Player (scene, is_main, name)
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(2);
@@ -350,7 +350,7 @@ var Player = new Phaser.Class({
             {
                 if (leftDown)
                 {
-                    this.fire(mouseX, mouseY, time);
+                    this.fire(mouseX, mouseY, time, 1000);
                 }
                 if (middleDown)
                 {
@@ -567,7 +567,7 @@ function create ()
             player_name = name_input.text;
         }
 
-        player_main = players.get(is_main=true, name=player_name);
+        player_main = players.get(true, player_name);
         player_main.spawn();
 
         respawn_button.setDepth(3);
