@@ -4,7 +4,7 @@ var MAP_WIDTH = 4000, MAP_HEIGHT = 3000;
 var center_x = SCREEN_WIDTH / 2, center_y = SCREEN_HEIGHT / 2;
 var maxPlayers = 3;
 var maxBots = 12;
-var maxBullets = 200;
+
 var maxPoints = 150;
 
 var reloadTime = 500;
@@ -12,7 +12,7 @@ var BLAST_SIZE = 4;
 var BOT_RANGE = 300;
 
 //
-var players, bots, bullets;
+var players, bots;
 var respawn_button, name_input, game_name, ui_rect;
 var leaderboard;
 
@@ -36,85 +36,13 @@ var config = {
     }
 };
 
-
 var game = new Phaser.Game(config);
-
-
-var Bullet = new Phaser.Class({
-
-    Extends: Phaser.GameObjects.Image,
-
-    initialize: function Bullet (scene, owner, owner_ref, sprite, lifespan)
-    {
-        Phaser.GameObjects.Image.call(this, scene, 0, 0, sprite);
-        this.incX = 0;
-        this.incY = 0;
-        this._owner = owner;
-        this.owner_ref = owner_ref;
-        this.lifespan = lifespan;
-        this.speed = Phaser.Math.GetSpeed(600, 1);
-    },
-
-    get_owner: function ()
-    {
-        return this._owner
-    },
-
-    fire: function (x, y, init_x, init_y)
-    {
-        this.setActive(true);
-        this.setVisible(true);
-
-        this.setPosition(init_x, init_y);
-
-        var angle = Phaser.Math.Angle.Between(x, y, init_x, init_y);
-
-        this.setRotation(angle);
-
-        this.incX = Math.cos(angle);
-        this.incY = Math.sin(angle);
-    },
-    
-    fanned_fire: function (x, y, init_x, init_y, i, n)
-    {
-        this.setActive(true);
-        this.setVisible(true);
-
-        this.setPosition(init_x, init_y);
-
-        var angle = Phaser.Math.Angle.Between(x, y, init_x, init_y) + (Math.PI / 4) - ((i/n) * Math.PI / 2);
-
-        this.setRotation(angle);
-
-        this.incX = Math.cos(angle);
-        this.incY = Math.sin(angle);
-    },
-
-    update: function (time, delta)
-    {
-        this.lifespan -= delta;
-
-        this.x -= this.incX * (this.speed * delta);
-        this.y -= this.incY * (this.speed * delta);
-
-        if (this.lifespan <= 0)
-        {
-            this.destroy();
-        }
-    },
-
-    destroy_bullet: function()
-    {
-        this.destroy();
-    }
-});
-
 
 var Bot = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Ellipse,
 
-    initialize: function Bot (scene, name = 'Bot')
+    initialize: function Bot (scene, name)
     {
         var color = new Phaser.Display.Color();
         color.random();
@@ -160,15 +88,6 @@ var Bot = new Phaser.Class({
         this.y = Math.max(0, Math.min(MAP_WIDTH, this.y));
 
         this.time += 1;
-    },
-
-    fire: function (x, y, time = 0, lifespan = 1000)
-    {
-        /* Fire single bullet. */
-        var bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet1', lifespan=lifespan);
-
-        bullet.fire(x, y, this.x, this.y);
-        this.reloadingUntil = time + reloadTime;
     },
 
     _list_ships () {
@@ -249,27 +168,6 @@ var Bot = new Phaser.Class({
         numBots -= 1;
     },
 
-    shoot_nearest: function (time)
-    {
-        /* Shoot nearest game object to bot. */
-        var closest = this.scene.physics.closest(this);
-
-        var dist = Math.pow(Math.pow(this.x - closest.x, 2) + Math.pow(this.y - closest.y, 2), .5)
-
-        if (time > this.reloadingUntil && dist < BOT_RANGE)
-        {
-            var x_noise = Phaser.Math.Between(-10, 10);
-            var y_noise = Phaser.Math.Between(-10, 10);
-            this.fire(closest.x + x_noise, closest.y + y_noise, time, 500);
-        }
-    },
-
-    owns: function (bullet)
-    {
-        /* Does this ship own bullet? */
-        return bullet.get_owner() == this._name;
-    },
-
     resize: function ()
     {
         this._scale = (this._score+50)/50;
@@ -294,7 +192,7 @@ var Player = new Phaser.Class({
 
     Extends: Bot,
 
-    initialize: function Player (scene, is_main=false, name='player')
+    initialize: function Player (scene, is_main, name)
     {
         var color = new Phaser.Display.Color();
         color.random();
@@ -334,14 +232,6 @@ var Player = new Phaser.Class({
 
             this.x -= Math.cos(angle) * (this.speed * delta);
             this.y -= Math.sin(angle) * (this.speed * delta);
-
-            if (time > this.reloadingUntil)
-            {
-                if (leftDown)
-                {
-                    this.fire(mouseX, mouseY, time);
-                }
-            }
         }
     },
 
@@ -455,28 +345,6 @@ function spawn_points (scene, n)
     }
 }
 
-function player_hit(player, bullet)
-{
-    if(!player.owns(bullet))
-    {
-        bullet.owner_ref._score += 5;
-
-        player.destroy_player();
-        bullet.destroy_bullet();
-    }
-}
-
-function bot_hit(bot, bullet)
-{
-    if(!bot.owns(bullet))
-    {
-        bullet.owner_ref._score += 50;
-
-        bot.destroy_bot();
-        bullet.destroy_bullet();
-    }
-}
-
 function bot_player_collision(bot, player)
 {
     if(bot.get_score() < player.get_score())
@@ -534,8 +402,6 @@ function preload ()
     /*
     Preload is called by Phaser before anything else.
     */
-    this.load.image('bullet1', 'assets/sprites/bullets/bullet11.png');
-    this.load.image('bullet2', 'assets/sprites/bullets/bullet4.png');
     this.load.image('button', 'assets/sprites/bullets/bullet11.png');
 
     this.load.scenePlugin({
@@ -590,15 +456,6 @@ function create ()
         runChildUpdate: true
     });
 
-    bullets = this.physics.add.group({
-        classType: Bullet,
-        maxSize: maxBullets,
-        runChildUpdate: true
-    });
-
-
-    this.physics.add.collider(players, bullets, player_hit, null, this);
-    this.physics.add.collider(bots, bullets, bot_hit, null, this);
     this.physics.add.collider(bots, players, bot_player_collision, null, this);
     this.physics.add.collider(bots, bots, bot_bot_collision, null, this);
     this.physics.add.collider(points, players, point_player_collision, null, this);
