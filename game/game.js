@@ -435,7 +435,7 @@ function spawn_bots (n)
     */
     numBots += n;
     for (var i = 0; i < n; i++) {
-        var curr_bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
+        var curr_bot = bots.get('Bot '+Phaser.Math.Between(1,999));
         curr_bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
     }
 }
