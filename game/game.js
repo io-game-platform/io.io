@@ -287,7 +287,7 @@ var Bot = new Phaser.Class({
         /* Shoot nearest game object to bot. */
         var closest = this.scene.physics.closest(this);
 
-        if (typeof closest !== 'undefined'){
+        if (typeof closest === 'undefined'){
             return;
         }
 
