@@ -14,7 +14,7 @@ var BOT_RANGE = 300;
 //
 var players, bots, bullets;
 var respawn_button, name_input;
-var leaderboard;
+var leaderboard, ui_rect, game_name;
 
 var player_main;
 var numBots = 0, reloadingUntil = 0;
@@ -162,7 +162,7 @@ var Bot = new Phaser.Class({
     fire: function (x, y, time, lifespan)
     {
         /* Fire single bullet. */
-        var bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet1', lifespan=lifespan);
+        var bullet = bullets.get(this._name, this, 'bullet1', lifespan);
 
         bullet.fire(x, y, this.x, this.y);
         this.reloadingUntil = time + reloadTime;
@@ -171,9 +171,10 @@ var Bot = new Phaser.Class({
     blast: function (x, y, time)
     {
         /* Fire blast of BLAST_SIZE bullets. */
+        var bullet;
         for(var i=0; i<BLAST_SIZE+1; i++)
         {
-            bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet2', lifespan=400)
+            bullet = bullets.get(this._name, this, 'bullet2', 400)
             bullet.fanned_fire(mouseX, mouseY, this.x, this.y, i, BLAST_SIZE)
         }
         this.reloadingUntil = time + reloadTime;
@@ -285,6 +286,10 @@ var Bot = new Phaser.Class({
     {
         /* Shoot nearest game object to bot. */
         var closest = this.scene.physics.closest(this);
+
+        if (typeof closest !== 'undefined'){
+            return;
+        }
 
         var dist = Math.pow(Math.pow(this.x - closest.x, 2) + Math.pow(this.y - closest.y, 2), .5)
 
@@ -414,8 +419,10 @@ class Leaderboard {
         ships.sort(function(a, b){return b._score - a._score});
 
         for (var i = 0; i < this.n_entries; i++) {
-            this.entry[i][0].text = ships[i]._name;
-            this.entry[i][1].text = ships[i]._score;
+            if(typeof ships[i] !== 'undefined'){
+                this.entry[i][0].text = ships[i]._name;
+                this.entry[i][1].text = ships[i]._score;
+            }
         }
     }
 };
@@ -550,7 +557,7 @@ function create ()
     ui_rect = this.add.rectangle(center_x-4, center_y, rect_w, rect_h, 0x555555);
     ui_rect.setOrigin(0.5, 0.5);
 
-    game_name = this.add.text(center_x, center_y-40, 'clone.io', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' });
+    game_name = this.add.text(center_x, center_y-40, 'template', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' });
     game_name.setOrigin(0.5, 0.5);
 
     name_input = this.add.text(center_x, center_y, 'Enter name here', { fixedWidth: 150, fixedHeight: 36 });
@@ -588,7 +595,7 @@ function create ()
     //  SPAWN  //
     /////////////
 
-    player_main = players.get(is_main=true, name='Coolest Player');
+    player_main = players.get(true, 'Coolest Player');
     player_main.spawn();
     player_main.destroy_player();
 }
