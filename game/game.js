@@ -12,7 +12,7 @@ var BLAST_SIZE = 4;
 var BOT_RANGE = 300;
 
 //
-var players, bots;
+var players, bots, points;
 var respawn_button, name_input, game_name, ui_rect;
 var leaderboard, ui_rect, game_name;
 
@@ -132,7 +132,8 @@ var Bot = new Phaser.Class({
         var min_distance = 10000000000;
 
         var ships = this._list_ships();
-
+    
+        var opponent;
         for (var i = 0; i < ships.length; i++){
             opponent = ships[i];
 
