@@ -18,7 +18,7 @@ var leaderboard;
 
 var player_main;
 var numBots = 0, reloadingUntil = 0;
-var leftDown = false, rightDown = false;
+var leftDown = false, middleDown = false;
 var mouseX = 0, mouseY = 0;
 
 var config = {
@@ -159,7 +159,7 @@ var Bot = new Phaser.Class({
         this.time += 1;
     },
 
-    fire: function (x, y, time = 0, lifespan = 1000)
+    fire: function (x, y, time, lifespan)
     {
         /* Fire single bullet. */
         var bullet = bullets.get(owner=this._name, owner_ref=this, sprite='bullet1', lifespan=lifespan);
@@ -168,7 +168,7 @@ var Bot = new Phaser.Class({
         this.reloadingUntil = time + reloadTime;
     },
 
-    blast: function (x, y, time = 0)
+    blast: function (x, y, time)
     {
         /* Fire blast of BLAST_SIZE bullets. */
         for(var i=0; i<BLAST_SIZE+1; i++)
@@ -274,9 +274,11 @@ var Bot = new Phaser.Class({
 
     destroy_bot: function ()
     {
-        this.destroy();
-        this._hide_name();
-        numBots -= 1;
+        if(this.active){
+            this.destroy();
+            this._hide_name();
+            numBots -= 1;
+        }
     },
 
     shoot_nearest: function (time)
@@ -306,7 +308,7 @@ var Player = new Phaser.Class({
 
     Extends: Bot,
 
-    initialize: function Player (scene, is_main=false, name='player')
+    initialize: function Player (scene, is_main, name)
     {
         Phaser.GameObjects.Image.call(this, scene, 0, 0, 'ship');
         this.setDepth(2);
@@ -348,9 +350,9 @@ var Player = new Phaser.Class({
             {
                 if (leftDown)
                 {
-                    this.fire(mouseX, mouseY, time);
+                    this.fire(mouseX, mouseY, time, 1000);
                 }
-                if (rightDown)
+                if (middleDown)
                 {
                     this.blast(mouseX, mouseY, time)
                 }
@@ -426,8 +428,8 @@ function spawn_bots (n)
     */
     numBots += n;
     for (var i = 0; i < n; i++) {
-        var bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
-        bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
+        var curr_bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
+        curr_bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
     }
 }
 
@@ -496,11 +498,11 @@ function create ()
     // Set global variables for pointer control
     this.input.on('pointerdown', function (pointer) {
         leftDown = pointer.leftButtonDown();
-        rightDown = pointer.rightButtonDown();
+        middleDown = pointer.middleButtonDown();
     });
     this.input.on('pointerup', function (pointer) {
         leftDown = pointer.leftButtonDown();
-        rightDown = pointer.rightButtonDown();
+        middleDown = pointer.middleButtonDown();
     });
 
     //////////////////////
@@ -517,7 +519,7 @@ function create ()
     var player_bounds = new Phaser.Geom.Rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT);
     players = this.physics.add.group({
         classType: Player,
-        maxSize: maxPlayers,
+        maxSize: maxPlayers + 100,
         customBoundsRectangle: player_bounds,
         collideWorldBounds: true,
         runChildUpdate: true
@@ -525,13 +527,13 @@ function create ()
 
     bots = this.physics.add.group({
         classType: Bot,
-        maxSize: maxBots,
+        maxSize: maxBots + 100,
         runChildUpdate: true
     });
 
     bullets = this.physics.add.group({
         classType: Bullet,
-        maxSize: maxBullets,
+        maxSize: maxBullets + 100,
         runChildUpdate: true
     });
 
@@ -565,7 +567,7 @@ function create ()
             player_name = name_input.text;
         }
 
-        player_main = players.get(is_main=true, name=player_name);
+        player_main = players.get(true, player_name);
         player_main.spawn();
 
         respawn_button.setDepth(3);
@@ -607,7 +609,7 @@ function update (time, delta)
         bot.shoot_nearest(time);
     }, this);
 
-
+    numBots = Math.max(0, numBots);
     spawn_bots(maxBots - numBots);
     leaderboard.update();
 }
