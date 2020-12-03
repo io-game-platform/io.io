@@ -15,3 +15,8 @@ Only a small percentage of games in this genre have achieved enough success to m
 
 Using the template is as simple as branching off of the template branch
 and customizing it to the needs of the game.
+
+You can quickly get the game running on the [Phaser 3 sanbox.](https://labs.phaser.io/edit.html?src=src/actions/grid%20align.js&v=3.24.1)
+Though you will be restricted to the assets and plugins it provides.
+
+Otherwise you will need to setup your own webserver using nodejs through [these tutorials.](https://phaser.io/tutorials/getting-started-phaser3)
