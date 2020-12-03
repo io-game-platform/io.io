@@ -511,7 +511,7 @@ function create ()
 
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    for(i=0;i<80;i++)
+    for(var i=0;i<80;i++)
     {
         this.add.sprite(Phaser.Math.Between(0, MAP_WIDTH), Phaser.Math.Between(0, MAP_HEIGHT), 'star', 0);
     }
