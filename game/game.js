@@ -14,7 +14,7 @@ var BOT_RANGE = 300;
 //
 var players, bots;
 var respawn_button, name_input, game_name, ui_rect;
-var leaderboard;
+var leaderboard, ui_rect, game_name;
 
 var player_main;
 var worldScale = 0, textScale = 1, zoomLevel = 1;
@@ -313,10 +313,12 @@ class Leaderboard {
         ships.sort(function(a, b){return b._score - a._score});
 
         for (var i = 0; i < this.n_entries; i++) {
-            this.entry[i][0].setScale(textScale)
-            this.entry[i][0].text = ships[i]._name;
-            this.entry[i][1].setScale(textScale)
-            this.entry[i][1].text = ships[i]._score;
+            if(typeof ships[i] !== 'undefined'){
+                this.entry[i][0].setScale(textScale)
+                this.entry[i][0].text = ships[i]._name;
+                this.entry[i][1].setScale(textScale)
+                this.entry[i][1].text = ships[i]._score;
+            }
         }
     }
 };
@@ -329,7 +331,7 @@ function spawn_bots (n)
     */
     numBots += n;
     for (var i = 0; i < n; i++) {
-        var bot = bots.get(name='Bot '+Phaser.Math.Between(1,999));
+        var bot = bots.get('Bot '+Phaser.Math.Between(1,999));
         bot.spawn(Phaser.Math.Between(i*(MAP_WIDTH/n), (i+1)*(MAP_WIDTH/n)), Phaser.Math.Between(i*(MAP_HEIGHT/n), (i+1)*(MAP_HEIGHT/n)));
     }
 }
@@ -486,7 +488,7 @@ function create ()
             player_name = name_input.text;
         }
 
-        player_main = players.get(is_main=true, name=player_name);
+        player_main = players.get(true, player_name);
         player_main.spawn();
 
         respawn_button.setDepth(3);
@@ -507,7 +509,7 @@ function create ()
     //  SPAWN  //
     /////////////
 
-    player_main = players.get(is_main=true, name='Coolest Player');
+    player_main = players.get(true, 'Coolest Player');
     player_main.spawn();
     player_main.destroy_player();
 }
