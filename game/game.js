@@ -10,6 +10,7 @@ var maxPoints = 150;
 var reloadTime = 500;
 var BLAST_SIZE = 4;
 var BOT_RANGE = 300;
+var HITBOX_SCALE = .8;
 
 //
 var players, bots, points;
@@ -176,6 +177,7 @@ var Bot = new Phaser.Class({
     {
         this._scale = (this._score+50)/50;
         this.setScale(this._scale);
+        this.body.setSize(HITBOX_SCALE * this.width, HITBOX_SCALE * this.height, true);
         this.nameOffsetY = this.height*this._scale/2; 
         this.nameOffsetX = (this.name.width/2)+(worldScale*10);
     },
@@ -245,7 +247,7 @@ var Player = new Phaser.Class({
         this.setScale(this._scale);
         this.nameOffsetY = this.height*this._scale/2; 
         this.nameOffsetX = (this.name.width/2)+(worldScale*15);
-
+        this.body.setSize(HITBOX_SCALE * this.width, HITBOX_SCALE * this.height, true);
         if(this.is_main){
             if(this._scale > (worldScale + 1) * 4 && worldScale < 8){
                 worldScale += 1;
