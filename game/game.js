@@ -33,7 +33,10 @@ var config = {
         preload: preload,
         create: create,
         update: update
-    }
+    },
+    dom: {
+        createContainer: true
+    },
 };
 
 var game = new Phaser.Game(config);
@@ -407,12 +410,12 @@ function preload ()
     */
     this.load.image('button', 'assets/sprites/bullets/bullet11.png');
 
-    this.load.scenePlugin({
-        key: 'rexuiplugin',
-        url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
-        sceneKey: 'rexUI'
-    });
-    this.load.plugin('rextexteditplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rextexteditplugin.min.js', true);
+    var url;
+    url = 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexbbcodetextplugin.min.js';
+    this.load.plugin('rexbbcodetextplugin', url, true);
+
+    url = 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rextexteditplugin.min.js';
+    this.load.plugin('rextexteditplugin', url, true);
 }
 
 
@@ -475,17 +478,33 @@ function create ()
     game_name = this.add.text(center_x, center_y-40, 'plankton.io', { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif' });
     game_name.setOrigin(0.5, 0.5);
 
-    name_input = this.add.text(center_x, center_y, 'Enter name here', { fixedWidth: 150, fixedHeight: 36 });
-    name_input.setOrigin(0.5, 0.5);
-    name_input.setInteractive().on('pointerdown', () => {
-        this.rexUI.edit(name_input)
-    });
+    var initial_text = 'Enter name here';
+
+    // https://codepen.io/rexrainbow/pen/GaxqLZ?editors=0010
+    name_input = this.add.rexBBCodeText(center_x, center_y-12, initial_text, {
+        color: 'white',
+        fontSize: '14px',
+        fixedWidth: 140,
+        fixedHeight: 20,
+        //valign: 'center'
+    })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerdown', function () {
+            if (name_input.text === initial_text){
+                name_input.text = '';
+            }
+            var editbox = this.plugins.get('rextexteditplugin').edit(name_input);
+
+            editbox.inputText.x = center_x;
+            editbox.inputText.y = center_y;
+        }, this);
 
     respawn_button = this.add.sprite(center_x, center_y, 'button', 0);
     respawn_button.setInteractive();
     respawn_button.on('pointerdown', function () {
         var player_name = 'Coolest Player';
-        if (!(name_input.text === 'Enter name here')){
+        if (!(name_input.text === initial_text)){
             player_name = name_input.text;
         }
 
